@@ -1,73 +1,67 @@
-import regex as re
-from collections import defaultdict
+import regex
+from collections import defaultdict, Counter
 
-def process_text_with_pre_tokenize(text, PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""):
-    '''
-    Pre-tokenize the text using regex to match tokens.
-    This function uses a regex pattern to find tokens in the text.
-    It returns a dictionary with tuple of characters as keys and their counts as values.
-    '''
-    token_counts = defaultdict(int)
-    for match in re.finditer(PAT, text):
-        token = match.group()
-        char_tuple = tuple(token)  # Convert string token to tuple of characters
-        token_counts[char_tuple] += 1
-    return dict(token_counts)
-
-
-def convert_dict_to_list(tokens_counts):
-    '''
-    Convert the dictionary of token counts to a list of tuples.
-    Each tuple contains a token and its count.
-    '''
-    return list(tokens_counts.keys())
-
-
-def break_ties_during_merge_by_lexicographically(list_of_tuples):
-    '''
-    Break ties during merge by lexicographically sorting the tuples.
-    This function return the maximum tuple based on the first element.
-    '''
-    return max(list_of_tuples)
-
-
-def convert_utf8_to_int(tokens_representation):
-    '''
-    Convert the tokens representation from UTF-8 to integers.
-    This function checks the type of the first element in the list and
-    converts the entire list accordingly.
-    '''
-    if isinstance(tokens_representation[0], str):
-        print("Converting str to int")
-        return [list(map(ord, string)) for string in tokens_representation]
-    if isinstance(tokens_representation[0], bytes):
-        print("Converting bytes to int")
-        return [list(bytes_item) for bytes_item in tokens_representation]
-    
+def get_raw_tokens(text):
+    # Use Unicode letters, then split on whitespace
+    tokens = regex.findall(r"\p{L}+", text)
+    return " ".join(tokens)
 
 def get_list_of_characters(pure_word_result):
-    int_indices = list(map(int, pure_word_result.encode("utf-8")))
-    char_indices = list(map(str, pure_word_result))
-    return int_indices, char_indices
+    # Preserve word boundaries
+    return [list(word) for word in pure_word_result.split()]
 
-
-def combine_successive_tokens(tokens):
-    # First we need to get the sucessive pairs of characters
+def count_pair_frequencies(tokens_counter):
     counts = defaultdict(int)
-    for indices1, indices2 in zip(tokens, tokens[1:]): 
-        counts[(indices1, indices2)] += 1
+    for word, freq in tokens_counter.items():
+        for i in range(len(word) - 1):
+            pair = (word[i], word[i+1])
+            counts[pair] += freq
     return counts
 
-
 def find_max_pair(counts):
-    # Find the maximum pair based on the counts
-    max_pair = max(counts, key=lambda x: (counts[x], x))
-    return max_pair
+    # Deterministic: break ties using lexicographic order
+    return max(counts, key=lambda x: (counts[x], x))
 
+def merge_tokens(tokens_counter, match1, match2):
+    new_counter = Counter()
+    for word, freq in tokens_counter.items():
+        new_word = []
+        i = 0
+        while i < len(word):
+            if i < len(word) - 1 and word[i] == match1 and word[i+1] == match2:
+                new_word.append(match1 + match2)
+                i += 2
+            else:
+                new_word.append(word[i])
+                i += 1
+        new_counter[tuple(new_word)] += freq
+    return new_counter
 
+def print_tokens(tokens_counter):
+    print("Current tokens:")
+    tokens_list = [list(word) for word in tokens_counter.keys()]
+    print(" ".join(["' '".join(word) for word in tokens_list]))
+    print()
 
+def BPE_training_naive_version(text, num_merges=6, verbose=False):
+    # Step 1: Pre-tokenization and splitting into characters
+    new_vocab = []
+    pure_word_result = get_raw_tokens(text)
+    tokens_list = get_list_of_characters(pure_word_result)
+    tokens_counter = Counter(tuple(word) for word in tokens_list)
 
+    # Step 2: Perform merges
+    for i in range(num_merges):
+        counts = count_pair_frequencies(tokens_counter)
+        if not counts:
+            break
+        match1, match2 = find_max_pair(counts)
+        new_vocab.append(match1+match2)
+        tokens_counter = merge_tokens(tokens_counter, match1, match2)
+        if verbose:
+            print(f"Counts: {counts}")
+            print(f"Merge {i+1}: ({match1}, {match2})")
+            print_tokens(tokens_counter)
 
-
-
+    return tokens_counter, new_vocab
 
