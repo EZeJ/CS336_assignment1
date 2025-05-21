@@ -1,5 +1,9 @@
 import regex
 from collections import defaultdict, Counter
+import cProfile
+import pstats
+
+
 
 def get_raw_tokens(text):
     # Use Unicode letters, then split on whitespace
@@ -64,4 +68,24 @@ def BPE_training_naive_version(text, num_merges=6, verbose=False):
             print_tokens(tokens_counter)
 
     return tokens_counter, new_vocab
+
+# Time function time consumption for optimization
+
+def run_bpe(text, num_merges):
+    return BPE_training_naive_version(text, num_merges=num_merges, verbose=False)
+
+
+
+def time_consumption(func):
+    file_path = "/Users/ethanj/Documents/CODE/Stanford_CS336/assignment1-basics-main/cs336_basics/text_examples/text_ex1.txt"
+    with open(file_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    profiler = cProfile.Profile()
+    profiler.enable()
+    final_result, new_vocab = run_bpe(text, 10000)
+    profiler.disable()
+
+    stats = pstats.Stats(profiler)
+    stats.strip_dirs().sort_stats("cumtime").print_stats(20)  # Top 20 by cumulative time
+    return final_result, new_vocab
 
