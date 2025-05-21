@@ -3,7 +3,7 @@ from abc import ABC
 from dataclasses import dataclass
 from collections import defaultdict
 import random
-
+import tiktoken
 
 class Tokenizer(ABC):
     # what is ABC?
@@ -120,3 +120,27 @@ def get_gpt2_tokenizer():
     # You can use cl100k_base for the gpt3.5-turbo or gpt4 tokenizer
     return tiktoken.get_encoding("gpt2")
 
+
+def train_bpe(string: str, num_merges: int) -> BPETokenizerParams:  # @inspect string, @inspect num_merges
+    # text("Start with the list of bytes of `string`.") 
+    indices = list(map(int, string.encode("utf-8")))  # @inspect indices
+    merges: dict[tuple[int, int], int] = {}  # index1, index2 => merged index
+    vocab: dict[int, bytes] = {x: bytes([x]) for x in range(256)}  # index -> bytes
+
+    for i in range(num_merges):
+        # text("Count the number of occurrences of each pair of tokens")
+        counts = defaultdict(int)
+        for index1, index2 in zip(indices, indices[1:]):  # For each adjacent pair
+            counts[(index1, index2)] += 1  # @inspect counts
+
+        # text("Find the most common pair.")
+        pair = max(counts, key=counts.get)  # @inspect pair
+        index1, index2 = pair
+
+        # text("Merge that pair.")
+        new_index = 256 + i  # @inspect new_index
+        merges[pair] = new_index  # @inspect merges
+        vocab[new_index] = vocab[index1] + vocab[index2]  # @inspect vocab
+        indices = merge(indices, pair, new_index)  # @inspect indices
+ 
+    return BPETokenizerParams(vocab=vocab, merges=merges)
