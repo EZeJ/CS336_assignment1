@@ -5,9 +5,9 @@ import pstats
 
 
 
-def get_raw_tokens(text):
+def get_raw_tokens(text, PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""):
     # Use Unicode letters, then split on whitespace
-    tokens = regex.findall(r"\p{L}+", text)
+    tokens = regex.findall(PAT, text)
     return " ".join(tokens)
 
 def get_list_of_characters(pure_word_result):
