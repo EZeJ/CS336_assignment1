@@ -68,7 +68,7 @@ instance/
 # Scrapy stuff:
 .scrapy
 
-# data
+# ignore folders
 data/
 
 # Sphinx documentation
