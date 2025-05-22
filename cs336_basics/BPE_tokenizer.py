@@ -152,7 +152,7 @@ class BPETokenizer:
 
         # Run with global progress bar
         with multiprocessing.Pool() as pool:
-            results = list(tqdm(pool.imap(partial_func, chunks), total=len(chunks), desc="Tokenizing chunks"))
+            results = list(pool.imap(partial_func, chunks))
 
         tokens_counter = Counter()
         for counter in results:
@@ -173,3 +173,107 @@ class BPETokenizer:
 
     def get_params(self) -> BPETokenizerParams:
         return BPETokenizerParams(vocab=self.vocab, merges=self.merges)
+
+
+
+
+from typing import Iterable, Iterator
+import re
+import regex
+
+class Tokenizer:
+    def __init__(self, vocab: dict[int, bytes], merges: list[tuple[bytes, bytes]], special_tokens: list[str] | None = None):
+        self.byte_vocab = vocab.copy()
+        self.merges = merges
+        self.special_tokens = special_tokens or []
+
+        # Build a lookup from byte sequence to token id
+        self.byte_to_id = {v: k for k, v in self.byte_vocab.items()}
+
+        # Encode special tokens into bytes
+        self.special_tokens_bytes = [s.encode("utf-8") for s in self.special_tokens]
+        self.special_tokens_set = set(self.special_tokens_bytes)
+
+        for token in self.special_tokens_bytes:
+            if token not in self.byte_to_id:
+                new_id = len(self.byte_vocab)
+                self.byte_vocab[new_id] = token
+                self.byte_to_id[token] = new_id
+
+        # Prepare for efficient merge operations
+        self.merges = [(a, b) for a, b in merges]
+        self.merge_ranks = {pair: i for i, pair in enumerate(self.merges)}
+
+    @classmethod
+    def from_files(cls, vocab_filepath: str, merges_filepath: str, special_tokens: list[str] | None = None) -> "Tokenizer":
+        import json
+
+        with open(vocab_filepath, "r") as vf:
+            vocab_data = json.load(vf)
+            vocab = {int(i): bytes(v, "latin1") for v, i in vocab_data.items()}
+
+        merges = []
+        with open(merges_filepath, "r") as mf:
+            for line in mf:
+                if line.strip() and not line.startswith("#"):
+                    parts = line.strip().split()
+                    if len(parts) == 2:
+                        merges.append((bytes(parts[0], "latin1"), bytes(parts[1], "latin1")))
+
+        return cls(vocab, merges, special_tokens)
+
+    def _pre_tokenize(self, text: str) -> list[str]:
+        PAT = r"'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"
+        return regex.findall(PAT, text)
+
+    def _byte_pair_merge(self, token: bytes) -> list[bytes]:
+        # Convert bytes to tuple of single-byte elements
+        word = [bytes([b]) for b in token]
+        pairs = lambda w: set((w[i], w[i + 1]) for i in range(len(w) - 1))
+
+        while True:
+            candidate_pairs = pairs(word)
+            ranked_pairs = [(self.merge_ranks[p], p) for p in candidate_pairs if p in self.merge_ranks]
+            if not ranked_pairs:
+                break
+
+            _, best_pair = min(ranked_pairs)
+            new_word = []
+            i = 0
+            while i < len(word):
+                if i < len(word) - 1 and word[i] == best_pair[0] and word[i + 1] == best_pair[1]:
+                    new_word.append(word[i] + word[i + 1])
+                    i += 2
+                else:
+                    new_word.append(word[i])
+                    i += 1
+            word = new_word
+        return word
+
+    def encode(self, text: str) -> list[int]:
+        result = []
+        special_pattern = "|".join(re.escape(tok) for tok in sorted(self.special_tokens, key=len, reverse=True))
+        split_pattern = re.compile(f"({special_pattern})") if special_pattern else None
+
+        segments = re.split(split_pattern, text) if split_pattern else [text]
+
+        for segment in segments:
+            if segment == "":
+                continue
+            b = segment.encode("utf-8")
+            if b in self.special_tokens_set:
+                result.append(self.byte_to_id[b])
+            else:
+                for token in self._pre_tokenize(segment):
+                    for merged in self._byte_pair_merge(token.encode("utf-8")):
+                        result.append(self.byte_to_id[merged])
+        return result
+
+    def encode_iterable(self, iterable: Iterable[str]) -> Iterator[int]:
+        for line in iterable:
+            yield from self.encode(line)
+
+    def decode(self, ids: list[int]) -> str:
+        byte_seq = b"".join(self.byte_vocab[i] for i in ids)
+        return byte_seq.decode("utf-8", errors="replace")
+
