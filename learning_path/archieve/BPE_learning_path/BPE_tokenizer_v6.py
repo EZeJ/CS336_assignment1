@@ -136,6 +136,7 @@ class BPETokenizer:
             pair_counts = self.count_pair_frequencies(tokens_counter)
             if not pair_counts:
                 break
+
             match1, match2 = self.find_max_pair(pair_counts)
             merged_token = match1 + match2
 
@@ -144,7 +145,9 @@ class BPETokenizer:
             self.vocab[next_index] = merged_token
             self.merges.append((match1, match2))
             next_index += 1
+
         return self.vocab, self.merges
+
 
     def get_params(self) -> BPETokenizerParams:
         return BPETokenizerParams(vocab=self.vocab, merges=self.merges)
