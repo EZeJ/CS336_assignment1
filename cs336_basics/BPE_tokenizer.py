@@ -147,11 +147,6 @@ class BPETokenizer:
         print(f"Tokenizing {len(chunks)} chunks using multiprocessing...")
         print("################################################")
 
-        # partial_func = partial(BPETokenizer._static_process_chunk, special_tokens=special_tokens)
-
-        # with multiprocessing.Pool() as pool:
-        #     results = pool.map(partial_func, chunks)
-
         # Create partial with fixed special_tokens
         partial_func = partial(BPETokenizer._static_process_chunk, special_tokens=special_tokens)
 
