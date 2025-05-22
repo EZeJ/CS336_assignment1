@@ -10,6 +10,22 @@ import torch
 from torch import Tensor
 
 import cs336_basics.Tokenizers.BPE_tokenizer as bpe
+import cs336_basics.Transformers_cs336 as my_tf
+
+def detect_device() -> str:
+    """
+    Detects the most appropriate device available on the current system.
+
+    Returns:
+        str: 'cuda' for NVIDIA GPUs,
+             'mps' for Apple Silicon (Mac M1/M2),
+             'cpu' as a fallback.
+    """
+    if torch.cuda.is_available():
+        return "cuda"
+    if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 def run_linear(
@@ -30,8 +46,20 @@ def run_linear(
     Returns:
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
+    # test_linear = my_tf.modules.Linear(d_in, d_out)
+    # test_linear.load_state_dict({'weight': weights})
+    # return test_linear(in_features)
 
-    raise NotImplementedError
+    # Support device on GPU
+    # print(f"Using device: {detect_device()}")
+    device = torch.device(detect_device())
+    weights = weights.to(device)
+    in_features = in_features.to(device)
+
+    model = my_tf.modules.Linear(d_in, d_out, device=device)
+    model.load_state_dict({"weight": weights})
+    return model(in_features)
+
 
 
 def run_embedding(
