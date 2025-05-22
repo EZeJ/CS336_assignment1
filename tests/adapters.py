@@ -9,6 +9,8 @@ import numpy.typing as npt
 import torch
 from torch import Tensor
 
+import cs336_basics.BPE_tokenizer as bpe
+
 
 
 def run_linear(
@@ -588,4 +590,12 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    raise NotImplementedError
+    # raise NotImplementedError
+    my_BPE_tokenizer = bpe.BPETokenizer()
+    vocab, merges = my_BPE_tokenizer.train_BPE(
+        input_path=input_path,
+        vocab_size=vocab_size,
+        special_tokens=special_tokens, )
+    
+    return vocab, merges
+

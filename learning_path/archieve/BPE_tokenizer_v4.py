@@ -3,8 +3,7 @@ from dataclasses import dataclass
 from collections import defaultdict, Counter
 import regex
 import re
-import multiprocessing
-from collections import Counter
+
 
 GPT2_TOKENIZER_REGEX = (
     r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
@@ -86,25 +85,6 @@ class BPETokenizer:
 
         return new_counter
 
-    def _process_chunk_wrapper(self, args):
-        instance, chunk = args
-        return instance.process_text_with_pre_tokenize(chunk)
-
-    def process_chunks_with_multiprocessing(self, chunks: list[str]) -> Counter:
-        '''
-        Processes chunks in parallel using all available CPUs.
-        Returns a combined Counter of token byte tuples.
-        '''
-        num_cpus = multiprocessing.cpu_count()
-        with multiprocessing.Pool(processes=num_cpus) as pool:
-            results = pool.map(self._process_chunk_wrapper, [(self, chunk) for chunk in chunks])
-
-        tokens_counter = Counter()
-        for counter in results:
-            tokens_counter.update(counter)
-
-        return tokens_counter
-
     def train_BPE(self, input_path: str, vocab_size: int, special_tokens: list[str]) -> tuple[dict[int, bytes], list[tuple[bytes, bytes]]]:
         self.vocab = {}
         self.merges = []
@@ -128,8 +108,10 @@ class BPETokenizer:
         chunks = split_pattern.split(text)  # list of strings between special tokens
 
         # Step 3: Process each chunk separately
-        
-        tokens_counter = self.process_chunks_with_multiprocessing(chunks)
+        tokens_counter = Counter()
+        for chunk in chunks:
+            chunk_counter = self.process_text_with_pre_tokenize(chunk)
+            tokens_counter.update(chunk_counter)
 
         # Step 4: BPE merge loop
         while len(self.vocab) < vocab_size:
