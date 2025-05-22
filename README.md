@@ -1,8 +1,14 @@
 # My solutions for Stanford CS336 Assignment 1
 
+## Part 1
+### Pass Test of Part 1
+![alt text](images/part1_output.png)
+Code in `cs336_basics/BPE_tokenizer.py`
+### Trainig Time of TinyStores
+![alt text](images/trainig_time_of_tinyStores.png)
 # CS336 Spring 2025 Assignment 1: Basics
 
-For a full description of the assignment, see the assignment handout at
+For a full description of the assignment, see the asssignment handout at
 [cs336_spring2025_assignment1_basics.pdf](./cs336_spring2025_assignment1_basics.pdf)
 
 If you see any issues with the assignment handout or code, please feel free to
