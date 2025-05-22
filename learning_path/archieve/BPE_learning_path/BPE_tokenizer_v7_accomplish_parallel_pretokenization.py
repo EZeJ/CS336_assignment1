@@ -6,6 +6,8 @@ import re
 import os
 import multiprocessing
 from tqdm import tqdm
+from functools import partial
+
 
 # === Chunking Utilities ===
 def find_chunk_boundaries(file: BinaryIO, desired_num_chunks: int, split_special_token: bytes) -> list[int]:
@@ -70,21 +72,32 @@ class BPETokenizer:
             self.merges = []
 
     def process_text_with_pre_tokenize(self, text: str) -> Counter[tuple[bytes, ...]]:
+        '''
+        Pre-tokenizes text using GPT-2 regex, encodes tokens in UTF-8, and returns a Counter
+        of token byte tuples (e.g., (b't', b'h', b'e')) with their frequencies.
+        '''
+        PAT = GPT2_TOKENIZER_REGEX
         tokens_counter = Counter()
-        for match in regex.finditer(GPT2_TOKENIZER_REGEX, text):
+
+        for match in regex.finditer(PAT, text):
             token = match.group()
             token_bytes = token.encode("utf-8")
-            byte_tuple = tuple(bytes([b]) for b in token_bytes)
+            byte_tuple = tuple(bytes([b]) for b in token_bytes)  # tuple of bytes
             tokens_counter[byte_tuple] += 1
+
         return tokens_counter
 
     @staticmethod
-    def _static_process_chunk(text: str) -> Counter[tuple[bytes, ...]]:
+    def _static_process_chunk(text: str, special_tokens: list[str]) -> Counter[tuple[bytes, ...]]:
+        split_pattern = re.compile("|".join(re.escape(tok) for tok in special_tokens))
+        chunks = split_pattern.split(text)  # keeps special tokens
         tokenizer = BPETokenizer()
-        
-
-        return tokenizer.process_text_with_pre_tokenize(text)
-
+        tokens_counter = Counter()
+        for chunk in chunks:
+            chunk_counter = tokenizer.process_text_with_pre_tokenize(chunk)
+            tokens_counter.update(chunk_counter)
+        return tokens_counter
+    
     def count_pair_frequencies(self, tokens_counter: Counter[tuple[bytes]]) -> dict[tuple[bytes, bytes], int]:
         counts = defaultdict(int)
         for word, freq in tokens_counter.items():
@@ -116,6 +129,7 @@ class BPETokenizer:
         self.vocab = {}
         self.merges = []
 
+        # Initialize vocab with special tokens first
         for i, token in enumerate(special_tokens):
             self.vocab[i] = token.encode("utf-8")
 
@@ -125,17 +139,18 @@ class BPETokenizer:
 
         next_index = offset + 256
 
-        # Step 1: Load file and preserve special tokens
-        with open(input_path, "r", encoding="utf-8") as f:
-            text = f.read()
+        # Step 1: Get file chunks
+        chunks = get_chunk(input_path, multiprocessing.cpu_count())
 
-        split_pattern = re.compile("(" + "|".join(re.escape(tok) for tok in special_tokens) + ")")
-        chunks = split_pattern.split(text)  # keeps special tokens
+        # Step 2: Parallel processing of tokenization
+        print("\n################################################")
+        print(f"Tokenizing {len(chunks)} chunks using multiprocessing...")
+        print("################################################")
 
-        # Step 2: Parallel processing
-        print("Tokenizing chunks using multiprocessing...")
+        partial_func = partial(BPETokenizer._static_process_chunk, special_tokens=special_tokens)
+
         with multiprocessing.Pool() as pool:
-            results = pool.map(BPETokenizer._static_process_chunk, chunks)
+            results = pool.map(partial_func, chunks)
 
         tokens_counter = Counter()
         for counter in results:
@@ -152,7 +167,6 @@ class BPETokenizer:
                 self.merges.append((match1, match2))
                 next_index += 1
                 pbar.update(1)
-
         return self.vocab, self.merges
 
     def get_params(self) -> BPETokenizerParams:
