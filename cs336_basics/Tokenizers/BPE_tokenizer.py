@@ -143,9 +143,9 @@ class BPETokenizer:
         chunks = get_chunk(input_path, multiprocessing.cpu_count())
 
         # Step 2: Parallel processing of tokenization
-        print("\n################################################")
-        print(f"Tokenizing {len(chunks)} chunks using multiprocessing...")
-        print("################################################")
+        # print("\n################################################")
+        # print(f"Tokenizing {len(chunks)} chunks using multiprocessing...")
+        # print("################################################")
 
         # Create partial with fixed special_tokens
         partial_func = partial(BPETokenizer._static_process_chunk, special_tokens=special_tokens)
