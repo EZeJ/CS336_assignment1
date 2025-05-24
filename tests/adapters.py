@@ -247,7 +247,11 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    rope = my_tf.modules.RotaryPositionalEmbedding(theta=theta, d_k=d_k, max_seq_len=max_seq_len)
+    device = torch.device(detect_device())
+    in_query_or_key = in_query_or_key.to(device)
+    token_positions = token_positions.to(device)
+
+    rope = my_tf.modules.RotaryPositionalEmbedding(theta=theta, d_k=d_k, max_seq_len=max_seq_len, device=device)
     return rope(in_query_or_key, token_positions)
 
 

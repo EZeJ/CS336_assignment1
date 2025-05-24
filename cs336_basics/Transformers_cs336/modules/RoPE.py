@@ -7,7 +7,7 @@ from torch import Tensor
 
 class RotaryPositionalEmbedding(nn.Module):
     """
-        Implements Rotary Positional Embedding (RoPE) for transformer-based models.
+        Implements Rotary Positional Embedding (RoPE) for transformer-based models with matrices operation.
 
         RoPE is a method of encoding positional information using rotating vectors in 2D subspaces
         of the input embeddings. It allows attention mechanisms to naturally incorporate relative
@@ -68,8 +68,8 @@ class RotaryPositionalEmbedding(nn.Module):
        
         # Compute inverse frequencies for each pair dimension
         inv_freq = 1.0 / (
-            self.theta ** (torch.arange(0, self.d_k, 2, dtype=torch.float32) / self.d_k)
-        )  # (d_k/2,)
+            self.theta ** (torch.arange(0, self.d_k, 2, dtype=torch.float32, device=self.device) / self.d_k)
+        )  # (d_k/2,))
 
         # Positions index
         positions = torch.arange(self.max_seq_len, dtype=torch.float32, device=self.device)  # (max_seq_len,)
@@ -139,4 +139,3 @@ class RotaryPositionalEmbedding(nn.Module):
         
         # put_it_back = rearrange(out_pair, "... h row -> ... (h row)")
         # return put_it_back
-
