@@ -6,3 +6,4 @@ from .linear import Linear
 from .embedding import Embedding
 from .RMSNorm import RMSNorm
 from .SwiGLU import SwiGLU
+from .RoPE import RotaryPositionalEmbedding
