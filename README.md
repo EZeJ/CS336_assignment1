@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # CS336 Spring 2025 Assignment 1: Basics
 
 For a full description of the assignment, see the assignment handout at
@@ -14,7 +13,6 @@ Code in `cs336_basics/BPE_tokenizer.py`
 # CS336 Spring 2025 Assignment 1: Basics
 
 For a full description of the assignment, see the asssignment handout at
->>>>>>> mine/main
 [cs336_spring2025_assignment1_basics.pdf](./cs336_spring2025_assignment1_basics.pdf)
 
 If you see any issues with the assignment handout or code, please feel free to
