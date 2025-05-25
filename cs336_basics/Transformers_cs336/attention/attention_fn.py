@@ -59,7 +59,24 @@ def scaled_dot_product_attention(
     Q_T_K = einsum(Q, K, "... q d, ... k d -> ... q k")
     Q_T_K_over_sqrt_d_k = Q_T_K / torch.sqrt(torch.tensor(d_k, dtype=Q.dtype)) # Scale the scores
     if mask is not None:
-        masked_Q_T_K_over_sqrt_d_k = Q_T_K_over_sqrt_d_k.masked_fill(mask == 0, float("-inf"))
-    softmax_QK_scores = softmax(masked_Q_T_K_over_sqrt_d_k, dim_i=-1)  # Apply softmax to get attention weights
+        Q_T_K_over_sqrt_d_k = Q_T_K_over_sqrt_d_k.masked_fill(mask == 0, float("-inf"))
+
+    # Apply softmax over the last dimension (keys) of the attention scores.
+    softmax_QK_scores = softmax(Q_T_K_over_sqrt_d_k, dim_i=-1)  
+    # After computing Q^T @ K (In mathematic notation), we obtain a tensor 
+    # of shape [..., queries, keys], where each entry represents the similarity 
+    # between a query and a key.
+    #
+    # We apply softmax along the last dimension (dim = -1) to normalize these
+    # scores across all keys for each query. This converts raw similarity scores
+    # into a probability distribution, so each query assigns attention weights 
+    # summing to 1 across all keys.
+    #
+    # In other words:
+    #   - For each query: softmax tells us how much attention to pay to each key.
+    #   - Softmax on dim=-1 ensures this happens for each query independently.
+    #
+    # Do NOT apply softmax on dim=-2 (queries), as this would normalize across
+    # queries for each key — which is not the intended behavior in attention.
     attn_scores = einsum(softmax_QK_scores, V, "... q k, ... k v -> ... q v")
     return attn_scores

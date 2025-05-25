@@ -4,8 +4,10 @@ import math
 from einops import rearrange, einsum, reduce
 from torch import nn
 from torch.nn import functional as F, init
-
 from .linear import Linear
+
+def silu(x: Tensor) -> Tensor:
+        return x * torch.sigmoid(x)
 
 class SwiGLU(nn.Module):
     r"""
@@ -76,7 +78,6 @@ class SwiGLU(nn.Module):
             dtype=self.dtype,
         )
 
-
     def _compute_d_ff(d_model: int) -> int:
         """
         Computes the hidden dimension d_ff as (8/3) * d_model,
@@ -85,9 +86,6 @@ class SwiGLU(nn.Module):
         rough = (8 * d_model) / 3
         d_ff = math.ceil(rough / 64) * 64
         return int(d_ff)
-
-    def silu(self, x: Tensor) -> Tensor:
-        return x * torch.sigmoid(x)
     
     def forward(self, x: Tensor) -> Tensor:
         """
@@ -101,6 +99,6 @@ class SwiGLU(nn.Module):
         """
         wx1 = self.w1(x)
         wx3 = self.w3(x)
-        silu_wx1 = self.silu(wx1)
+        silu_wx1 = silu(wx1)
         swiglu = self.w2(silu_wx1 * wx3)
         return swiglu

@@ -186,7 +186,16 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    multi_head_self_attention = my_tf.attention.MultiheadSelfAttention(
+        d_model=d_model,
+        num_heads=num_heads,
+    )
+    # Load the weights into the model
+    multi_head_self_attention.q_proj_weight.weight.data = q_proj_weight
+    multi_head_self_attention.k_proj_weight.weight.data = k_proj_weight
+    multi_head_self_attention.v_proj_weight.weight.data = v_proj_weight
+    multi_head_self_attention.o_proj_weight.weight.data = o_proj_weight
+    return multi_head_self_attention(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -226,7 +235,19 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    multi_head_self_attention = my_tf.attention.MultiheadSelfAttention(
+        d_model=d_model,
+        num_heads=num_heads,
+        max_seq_len=max_seq_len,
+        theta=theta,
+        token_positions=token_positions,
+    )
+    # Load the weights into the model
+    multi_head_self_attention.q_proj_weight.weight.data = q_proj_weight
+    multi_head_self_attention.k_proj_weight.weight.data = k_proj_weight
+    multi_head_self_attention.v_proj_weight.weight.data = v_proj_weight
+    multi_head_self_attention.o_proj_weight.weight.data = o_proj_weight
+    return multi_head_self_attention(in_features)
 
 
 def run_rope(
@@ -451,7 +472,7 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    raise NotImplementedError
+    return my_tf.modules.silu(in_features)
 
 
 def run_get_batch(

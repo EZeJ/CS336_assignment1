@@ -101,8 +101,19 @@ class RotaryPositionalEmbedding(nn.Module):
         """
 
         # It appears that using einops in our case is very much slower than using torch directly.
+        # Method2     
+        # Time consuming: 0.47s
         
-        # Method 1
+        re_in_query_or_key = rearrange(x, "... (b1 b2) -> ... b1 b2", b2 = 2)
+
+        out_pair = einsum(
+            self.R[token_positions],       # (..., seq, h, row, col)
+            re_in_query_or_key,            # (..., seq, h, col)
+            "... seq h d_out d_in, ... seq h d_in -> ... seq h d_out"
+        )
+        return rearrange(out_pair, "... seq h d_out -> ... seq (h d_out)")
+        
+        # Method 2
         # Time consuming: 0.05s
 
         # Split into even/odd dims: (..., seq_len, d_k/2)
@@ -125,15 +136,3 @@ class RotaryPositionalEmbedding(nn.Module):
         # # Flatten the last two dims back to d_k: (..., seq_len, d_k)
         # return out_pair.flatten(-2)
     
-        # Method2     
-        # Time consuming: 0.47s
-        
-        re_in_query_or_key = rearrange(x, "batch pos (b1 b2) -> batch pos b1 b2", b2 = 2)
-
-        out_pair = einsum(
-            self.R[token_positions],       # (..., seq, h, row, col)
-            re_in_query_or_key,    # (..., seq, h, col)
-            "... d_out d_in, ... d_in-> ... d_out"
-        )
-        return rearrange(out_pair, "... h d_out -> ... (h d_out)")
-

@@ -81,7 +81,8 @@ class Linear(torch.nn.Module):
     # End of the reset_parameters method
 
     def forward(self, x: Tensor) -> Tensor:
-        return einsum(self.weight, x, "d_out d_in, ... d_in ->  ... d_out")
+        # return einsum(self.weight, x, "d_out d_in, ... d_in ->  ... d_out")
+        return einsum(self.weight, x, "d_out d_in, ... seq d_in -> ... seq d_out")
         # return F.linear(input, self.weight) for testing purpose
     # End of the forward method
 
