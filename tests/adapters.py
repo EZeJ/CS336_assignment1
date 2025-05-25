@@ -4,13 +4,9 @@ import os
 from typing import IO, Any, BinaryIO
 from collections.abc import Iterable
 from jaxtyping import Float, Int
-
 import numpy.typing as npt
 import torch
 from torch import Tensor
-
-<<<<<<< HEAD
-=======
 import cs336_basics.Tokenizers.BPE_tokenizer as bpe
 import cs336_basics.Transformers_cs336 as my_tf
 
@@ -29,7 +25,6 @@ def detect_device() -> str:
     if getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
         return "mps"
     return "cpu"
->>>>>>> mine/main
 
 
 def run_linear(
@@ -50,10 +45,6 @@ def run_linear(
     Returns:
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
-<<<<<<< HEAD
-
-    raise NotImplementedError
-=======
     # test_linear = my_tf.modules.Linear(d_in, d_out)
     # test_linear.load_state_dict({'weight': weights})
     # return test_linear(in_features)
@@ -66,8 +57,6 @@ def run_linear(
     model = my_tf.modules.Linear(d_in, d_out, device=device)
     model.load_state_dict({"weight": weights})
     return model(in_features)
-
->>>>>>> mine/main
 
 
 def run_embedding(
@@ -88,17 +77,12 @@ def run_embedding(
     Returns:
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
-<<<<<<< HEAD
-
-    raise NotImplementedError
-=======
     device = torch.device(detect_device())
     weights = weights.to(device)
     token_ids = token_ids.to(device)
     model = my_tf.modules.Embedding(vocab_size, d_model, device=device)
     model.load_state_dict({"weight": weights})
     return model(token_ids)
->>>>>>> mine/main
 
 
 def run_swiglu(
@@ -130,9 +114,6 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
 
     device = torch.device(detect_device())
 
@@ -147,8 +128,6 @@ def run_swiglu(
     swiglu.w3.weight.data = w3_weight
 
     return swiglu(in_features)
-
->>>>>>> mine/main
 
 
 def run_scaled_dot_product_attention(
@@ -169,11 +148,8 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     return my_tf.attention.scaled_dot_product_attention(Q, K, V, mask)
->>>>>>> mine/main
+
 
 
 def run_multihead_self_attention(
@@ -207,9 +183,6 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     multi_head_self_attention = my_tf.attention.MultiheadSelfAttention(
         d_model=d_model,
         num_heads=num_heads,
@@ -220,7 +193,7 @@ def run_multihead_self_attention(
     multi_head_self_attention.v_proj_weight.weight.data = v_proj_weight
     multi_head_self_attention.o_proj_weight.weight.data = o_proj_weight
     return multi_head_self_attention(in_features)
->>>>>>> mine/main
+
 
 
 def run_multihead_self_attention_with_rope(
@@ -260,9 +233,6 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     multi_head_self_attention = my_tf.attention.MultiheadSelfAttention(
         d_model=d_model,
         num_heads=num_heads,
@@ -275,7 +245,7 @@ def run_multihead_self_attention_with_rope(
     multi_head_self_attention.v_proj_weight.weight.data = v_proj_weight
     multi_head_self_attention.o_proj_weight.weight.data = o_proj_weight
     return multi_head_self_attention(in_features, token_positions=token_positions)
->>>>>>> mine/main
+
 
 
 def run_rope(
@@ -297,9 +267,6 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     device = torch.device(detect_device())
     in_query_or_key = in_query_or_key.to(device)
     token_positions = token_positions.to(device)
@@ -307,7 +274,6 @@ def run_rope(
     rope = my_tf.modules.RotaryPositionalEmbedding(theta=theta, d_k=d_k, max_seq_len=max_seq_len, device=device)
     return rope(in_query_or_key, token_positions)
 
->>>>>>> mine/main
 
 
 def run_transformer_block(
@@ -380,10 +346,6 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
-
     device = torch.device(detect_device())
     in_features = in_features.to(device)
 
@@ -416,8 +378,6 @@ def run_transformer_block(
     # Run the transformer block
     return transformer_block(in_features, token_positions=token_positions)
 
->>>>>>> mine/main
-
 
 def run_transformer_lm(
     vocab_size: int,
@@ -432,11 +392,6 @@ def run_transformer_lm(
 ) -> Float[Tensor, " batch_size sequence_length vocab_size"]:
     """Given the weights of a Transformer language model and input indices,
     return the output of running a forward pass on the input indices.
-<<<<<<< HEAD
-
-=======
-        
->>>>>>> mine/main
     This function should use RoPE.
 
     Args:
@@ -447,11 +402,7 @@ def run_transformer_lm(
         num_heads (int): Number of heads to use in multi-headed attention. `d_model` must be
             evenly divisible by `num_heads`.
         d_ff (int): Dimensionality of the feed-forward inner layer (section 3.3).
-<<<<<<< HEAD
-        rope_theta (float): The RoPE $\Theta$ parameter.
-=======
         rope_theta (float): The RoPE $\\Theta$ parameter.
->>>>>>> mine/main
         weights (dict[str, Tensor]): 
             State dict of our reference implementation. {num_layers} refers to an
             integer between `0` and `num_layers - 1` (the layer index).
@@ -529,16 +480,13 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     device = torch.device(detect_device())
     weights = weights.to(device)
     in_features = in_features.to(device)
     model = my_tf.modules.RMSNorm(d_model=d_model, eps = eps, device=device)
     model.load_state_dict({"weight": weights})
     return model(in_features)
->>>>>>> mine/main
+
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -552,11 +500,7 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     return my_tf.modules.silu(in_features)
->>>>>>> mine/main
 
 
 def run_get_batch(
@@ -595,12 +539,8 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     return my_tf.attention.softmax(in_features, dim)
     
->>>>>>> mine/main
 
 
 def run_cross_entropy(inputs: Float[Tensor, " batch_size vocab_size"], targets: Int[Tensor, " batch_size"]) -> Float[Tensor, ""]:
@@ -726,11 +666,7 @@ def get_tokenizer(
     Returns:
         A BPE tokenizer that uses the provided vocab, merges, and special tokens.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     return bpe.Tokenizer(vocab, merges, special_tokens)
->>>>>>> mine/main
 
 
 def run_train_bpe(
@@ -760,9 +696,6 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-<<<<<<< HEAD
-    raise NotImplementedError
-=======
     # raise NotImplementedError
     my_BPE_tokenizer = bpe.BPETokenizer()
     vocab, merges = my_BPE_tokenizer.train_BPE(
@@ -772,4 +705,3 @@ def run_train_bpe(
     
     return vocab, merges
 
->>>>>>> mine/main
