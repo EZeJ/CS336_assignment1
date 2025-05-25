@@ -12,6 +12,7 @@ from torch import Tensor
 import cs336_basics.Tokenizers.BPE_tokenizer as bpe
 import cs336_basics.Transformers_cs336 as my_tf
 
+
 def detect_device() -> str:
     """
     Detects the most appropriate device available on the current system.
@@ -151,7 +152,7 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    return my_tf.attention.scaled_dot_product_attention(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -489,7 +490,8 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    raise NotImplementedError
+    return my_tf.attention.softmax(in_features, dim)
+    
 
 
 def run_cross_entropy(inputs: Float[Tensor, " batch_size vocab_size"], targets: Int[Tensor, " batch_size"]) -> Float[Tensor, ""]:
