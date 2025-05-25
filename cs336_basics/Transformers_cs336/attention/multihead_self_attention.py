@@ -2,7 +2,6 @@ import torch
 from torch import nn, Tensor
 from einops import rearrange, einsum
 from jaxtyping import Float
-import math
 import cs336_basics.Transformers_cs336 as my_tf
 
 
@@ -13,7 +12,6 @@ class MultiheadSelfAttention(nn.Module):
         num_heads: int,
         max_seq_len: int = None,
         theta: float = None,
-        token_positions: Float[Tensor, "batch seq_len"] = None,
         device: torch.device = None,
     ):
         super().__init__()
@@ -23,7 +21,6 @@ class MultiheadSelfAttention(nn.Module):
         self.d_v = self.d_k
         self.max_seq_len = max_seq_len
         self.theta = theta
-        self.token_positions = token_positions
         self.device = device
 
         # Projection weights
@@ -36,9 +33,13 @@ class MultiheadSelfAttention(nn.Module):
         # [1, 1, seq_len, seq_len] - broadcastable to (B, H, S, S)
         return torch.tril(torch.ones(seq_len, seq_len, dtype=torch.bool, device=device)).unsqueeze(0).unsqueeze(0)
 
-    def forward(self, in_features: Float[Tensor, "batch seq_len d_model"]) -> Float[Tensor, "batch seq_len d_model"]:
+    def forward(
+            self, in_features: Float[Tensor, "batch seq_len d_model"], 
+            token_positions: Float[Tensor, "batch seq_len"] = None,
+        ) -> Float[Tensor, "batch seq_len d_model"]:
+        
         B, S, _ = in_features.shape
-
+        self.token_positions = token_positions
         # Project input to Q, K, V
         Q = self.q_proj_weight(in_features)  # [B, S, H * d_k]
         K = self.k_proj_weight(in_features)
