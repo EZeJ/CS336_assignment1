@@ -347,28 +347,33 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
+
+    device = torch.device(detect_device())
+    in_features = in_features.to(device)
+
     transformer_block = my_tf.transformer.TransformerBlock(
         d_model=d_model,
         num_heads=num_heads,
         d_ff=d_ff,
         max_seq_len=max_seq_len,
         theta=theta,
+        device=device,
     )
 
     # Load the weights into the model
-    transformer_block.multihead_self_attention.q_proj_weight.weight.data = weights["attn.q_proj.weight"]
-    transformer_block.multihead_self_attention.k_proj_weight.weight.data = weights["attn.k_proj.weight"]
-    transformer_block.multihead_self_attention.v_proj_weight.weight.data = weights["attn.v_proj.weight"]
-    transformer_block.multihead_self_attention.o_proj_weight.weight.data = weights["attn.output_proj.weight"]
-    transformer_block.RMSNorm_ln1.weight.data = weights["ln1.weight"]
-    transformer_block.RMSNorM_ln2.weight.data = weights["ln2.weight"]
-    transformer_block.SwiGLU_ffn.w1.weight.data = weights["ffn.w1.weight"]
-    transformer_block.SwiGLU_ffn.w2.weight.data = weights["ffn.w2.weight"]
-    transformer_block.SwiGLU_ffn.w3.weight.data = weights["ffn.w3.weight"]
+    transformer_block.multihead_self_attention.q_proj_weight.weight.data = weights["attn.q_proj.weight"].to(device)
+    transformer_block.multihead_self_attention.k_proj_weight.weight.data = weights["attn.k_proj.weight"].to(device)
+    transformer_block.multihead_self_attention.v_proj_weight.weight.data = weights["attn.v_proj.weight"].to(device)
+    transformer_block.multihead_self_attention.o_proj_weight.weight.data = weights["attn.output_proj.weight"].to(device)
+    transformer_block.RMSNorm_ln1.weight.data = weights["ln1.weight"].to(device)
+    transformer_block.RMSNorM_ln2.weight.data = weights["ln2.weight"].to(device)
+    transformer_block.SwiGLU_ffn.w1.weight.data = weights["ffn.w1.weight"].to(device)
+    transformer_block.SwiGLU_ffn.w2.weight.data = weights["ffn.w2.weight"].to(device)
+    transformer_block.SwiGLU_ffn.w3.weight.data = weights["ffn.w3.weight"].to(device)
 
     # *******************************
     # We should create token positions outside of the transformer block
-    # on 
+    # on our own.
     batch_size, seq_len, _ = in_features.shape
     token_positions = torch.arange(seq_len, device=in_features.device).unsqueeze(0).expand(batch_size, -1)
 
