@@ -457,7 +457,43 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    device = torch.device(detect_device())
+    in_indices = in_indices.to(device)
+    
+    # Create model
+    model = my_tf.transformer.Transformer(
+        d_model=d_model,
+        num_heads=num_heads,
+        d_ff=d_ff,
+        vocab_size=vocab_size,
+        context_length=context_length,
+        num_layers=num_layers,
+        max_seq_len=context_length,
+        theta=rope_theta,
+        device=device,
+    )
+
+    # Load token embedding and output layer weights
+    model.embedding.weight.data = weights["token_embeddings.weight"].to(device)
+    model.RMSNorm_ln_final.weight.data = weights["ln_final.weight"].to(device)
+    model.lm_head.weight.data = weights["lm_head.weight"].to(device)
+
+    # Load transformer block weights
+    for layer_idx in range(num_layers):
+        block = model.transformer_layers[layer_idx]
+        prefix = f"layers.{layer_idx}."
+        block.multihead_self_attention.q_proj_weight.weight.data = weights[prefix + "attn.q_proj.weight"].to(device)
+        block.multihead_self_attention.k_proj_weight.weight.data = weights[prefix + "attn.k_proj.weight"].to(device)
+        block.multihead_self_attention.v_proj_weight.weight.data = weights[prefix + "attn.v_proj.weight"].to(device)
+        block.multihead_self_attention.o_proj_weight.weight.data = weights[prefix + "attn.output_proj.weight"].to(device)
+        block.RMSNorm_ln1.weight.data = weights[prefix + "ln1.weight"].to(device)
+        block.RMSNorM_ln2.weight.data = weights[prefix + "ln2.weight"].to(device)
+        block.SwiGLU_ffn.w1.weight.data = weights[prefix + "ffn.w1.weight"].to(device)
+        block.SwiGLU_ffn.w2.weight.data = weights[prefix + "ffn.w2.weight"].to(device)
+        block.SwiGLU_ffn.w3.weight.data = weights[prefix + "ffn.w3.weight"].to(device)
+
+    # Run model forward pass
+    return model(in_indices)
 
 
 def run_rmsnorm(

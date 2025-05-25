@@ -1,10 +1,11 @@
 import torch
 from torch import Tensor
-from einops import rearrange, reduce, einsum
+from einops import rearrange, reduce, einsum, repeat
 from jaxtyping import Float
 import cs336_basics.Transformers_cs336 as my_tf
 
-"""Given the weights of a Transformer language model and input indices,
+""" Upper Class Parameters
+    Given the weights of a Transformer language model and input indices,
     return the output of running a forward pass on the input indices.
     This function should use RoPE.
 
@@ -108,4 +109,42 @@ class Transformer(torch.nn.Module):
         # Build the Embedding Layer
         self.embedding = my_tf.modules.Embedding(vocab_size, d_model, device=device)
 
-        
+        self.transformer_layers = torch.nn.ModuleList([
+            my_tf.transformer.TransformerBlock(
+                d_model=d_model,
+                num_heads=num_heads,
+                d_ff=d_ff,
+                max_seq_len=context_length,
+                theta=theta,
+                device=device,
+            )
+            for _ in range(num_layers)
+        ])
+
+        # Build the Final Layer Norm
+        self.RMSNorm_ln_final = my_tf.modules.RMSNorm(d_model, device=device)
+
+        # Build the Final Linear Layer
+        self.lm_head = my_tf.modules.Linear(d_model, vocab_size, device=device)
+
+    
+    def forward(self, in_indices: Float[Tensor, "batch seq_len"]) -> Float[Tensor, "batch seq_len vocab_size"]:
+        # 1. Token embeddings
+        x = self.embedding(in_indices)  # [batch, seq_len, d_model]
+
+        # 2. Create token position ids (used for RoPE)
+        batch_size, seq_len = in_indices.shape
+        pos_ids = torch.arange(seq_len, device=in_indices.device)
+        pos_ids = repeat(pos_ids, 's -> b s', b=batch_size)
+
+        # 3. Pass through transformer layers
+        for layer in self.transformer_layers:
+            x = layer(x, token_positions=pos_ids)
+
+        # 4. Final RMSNorm
+        x = self.RMSNorm_ln_final(x)
+
+        # 5. Linear projection to vocab size
+        logits = self.lm_head(x)  # [batch, seq_len, vocab_size]
+
+        return logits

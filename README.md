@@ -3,12 +3,15 @@
 # My solutions for Stanford CS336 Assignment 1
 
 ## Part 1: BPE Tokenizer
-### Pass Test of Part 1
+### Passed All Tests of Part 1
 ![alt text](images/part1_output.png)
 Code in `cs336_basics/BPE_tokenizer.py`
 ### Trainig Time of TinyStores
 ![alt text](images/trainig_time_of_tinyStores.png)
 
+## Part 2: Transformer's structures
+# Passed All Tests of Part 2
+![alt text](images/transformer_structures.png)
 
 # CS336 Spring 2025 Assignment 1: Basics
 
