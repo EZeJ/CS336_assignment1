@@ -109,6 +109,7 @@ class Transformer(torch.nn.Module):
         # Build the Embedding Layer
         self.embedding = my_tf.modules.Embedding(vocab_size, d_model, device=device)
 
+        # Build the Transformer Layers with TransformerBlocks
         self.transformer_layers = torch.nn.ModuleList([
             my_tf.transformer.TransformerBlock(
                 d_model=d_model,
