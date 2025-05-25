@@ -7,8 +7,8 @@ __pycache__/
 *.so
 
 # Folders
-.Notebooks/
-.learning_path/
+Notebooks/
+learning_path/
 # Distribution / packaging
 .Python
 build/
