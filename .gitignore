@@ -68,6 +68,9 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+# ignore folders
+data/
+
 # Sphinx documentation
 docs/_build/
 
@@ -120,6 +123,8 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.DS_Store
+.vscode/
 .env
 .venv
 env/
@@ -161,3 +166,4 @@ cython_debug/
 
 .ruff_cache/
 *.zip
+

@@ -3,7 +3,11 @@ name = "cs336_basics"
 version = "1.0.3"
 description = "CS336 Assignment 1"
 readme = "README.md"
+<<<<<<< HEAD
 requires-python = ">=3.11"
+=======
+requires-python = ">=3.11, <3.12"
+>>>>>>> mine/main
 dependencies = [
     "einops>=0.8.1", # tensor operations
     "einx>=0.3.0", # more general tensor operations
