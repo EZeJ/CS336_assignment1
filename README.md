@@ -16,7 +16,7 @@ Code in `cs336_basics/BPE_tokenizer.py`
 
 # Extra Notes:
 
-## Use pytest-profiling + snakeviz to check runtime bottlenect
+## Use pytest-profiling + snakeviz to check runtime bottleneck
 1. Install
 `uv pip install pytest-profiling`
 `uv pip install snakeviz`
