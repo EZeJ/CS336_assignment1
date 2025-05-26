@@ -55,6 +55,7 @@ def scaled_dot_product_attention(
         - If a mask is provided, entries with mask == 0 are suppressed from attention.
         - The function assumes that Q, K, and V are already projected and aligned in dimensionality.
     """
+    # Einops Implementation of scaled dot-product attention
     d_k = Q.shape[-1]
     Q_T_K = einsum(Q, K, "... q d, ... k d -> ... q k")
     Q_T_K_over_sqrt_d_k = Q_T_K / torch.sqrt(torch.tensor(d_k, dtype=Q.dtype)) # Scale the scores
@@ -79,4 +80,17 @@ def scaled_dot_product_attention(
     # Do NOT apply softmax on dim=-2 (queries), as this would normalize across
     # queries for each key — which is not the intended behavior in attention.
     attn_scores = einsum(softmax_QK_scores, V, "... q k, ... k v -> ... q v")
+
+    # PyTorch Implementation of scaled dot-product attention
+    # d_k = Q.shape[-1]
+    # Q_T_K = torch.matmul(Q, K.transpose(-2, -1))  # shape: (..., queries, keys)
+    # Q_T_K_over_sqrt_d_k = Q_T_K / torch.sqrt(torch.tensor(d_k, dtype=Q.dtype, device=Q.device))  # Scale the scores
+
+    # if mask is not None:
+    #     Q_T_K_over_sqrt_d_k = Q_T_K_over_sqrt_d_k.masked_fill(mask == 0, float("-inf"))
+
+    # # Apply softmax over the last dimension (keys) of the attention scores.
+    # softmax_QK_scores = torch.nn.functional.softmax(Q_T_K_over_sqrt_d_k, dim=-1)
+    # attn_scores = torch.matmul(softmax_QK_scores, V)
+
     return attn_scores

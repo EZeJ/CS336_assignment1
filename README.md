@@ -13,6 +13,20 @@ Code in `cs336_basics/BPE_tokenizer.py`
 # Passed All Tests of Part 2
 ![alt text](images/transformer_structures.png)
 
+
+# Extra Notes:
+
+## Use pytest-profiling + snakeviz to check runtime bottlenect
+1. Install
+`uv pip install pytest-profiling`
+`uv pip install snakeviz`
+
+2. Run
+`pytest --profile tests/test_model.py`
+`snakeviz prof/combined.prof`
+
+3. Example:
+![alt text](images/snakeviz_example.png)
 # CS336 Spring 2025 Assignment 1: Basics
 
 For a full description of the assignment, see the asssignment handout at

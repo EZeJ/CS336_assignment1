@@ -104,35 +104,35 @@ class RotaryPositionalEmbedding(nn.Module):
         # Method2     
         # Time consuming: 0.47s
         
-        re_in_query_or_key = rearrange(x, "... (b1 b2) -> ... b1 b2", b2 = 2)
+        # re_in_query_or_key = rearrange(x, "... (b1 b2) -> ... b1 b2", b2 = 2)
 
-        out_pair = einsum(
-            self.R[token_positions],       # (..., seq, h, row, col)
-            re_in_query_or_key,            # (..., seq, h, col)
-            "... seq h d_out d_in, ... seq h d_in -> ... seq h d_out"
-        )
-        return rearrange(out_pair, "... seq h d_out -> ... seq (h d_out)")
+        # out_pair = einsum(
+        #     self.R[token_positions],       # (..., seq, h, row, col)
+        #     re_in_query_or_key,            # (..., seq, h, col)
+        #     "... seq h d_out d_in, ... seq h d_in -> ... seq h d_out"
+        # )
+        # return rearrange(out_pair, "... seq h d_out -> ... seq (h d_out)")
         
         # Method 2
         # Time consuming: 0.05s
 
         # Split into even/odd dims: (..., seq_len, d_k/2)
-        # x_even = x[..., 0::2]
-        # x_odd  = x[..., 1::2]
+        x_even = x[..., 0::2]
+        x_odd  = x[..., 1::2]
 
-        # # Gather the corresponding rotation matrices: (..., seq_len, d_k/2, 2, 2)
-        # rot = self.R[token_positions]
+        # Gather the corresponding rotation matrices: (..., seq_len, d_k/2, 2, 2)
+        rot = self.R[token_positions]
 
-        # # Pack x into last dimension: (..., seq_len, d_k/2, 2)
-        # x_pair = torch.stack([x_even, x_odd], dim=-1)
+        # Pack x into last dimension: (..., seq_len, d_k/2, 2)
+        x_pair = torch.stack([x_even, x_odd], dim=-1)
 
-        # # Matrix multiply each 2×2 rot matrix with its x_pair vector:
-        # # (..., seq_len, d_k/2, 2, 1)
-        # out_pair = torch.matmul(rot, x_pair.unsqueeze(-1))
+        # Matrix multiply each 2×2 rot matrix with its x_pair vector:
+        # (..., seq_len, d_k/2, 2, 1)
+        out_pair = torch.matmul(rot, x_pair.unsqueeze(-1))
 
-        # # Remove trailing singleton: (..., seq_len, d_k/2, 2)
-        # out_pair = out_pair.squeeze(-1)
+        # Remove trailing singleton: (..., seq_len, d_k/2, 2)
+        out_pair = out_pair.squeeze(-1)
 
-        # # Flatten the last two dims back to d_k: (..., seq_len, d_k)
-        # return out_pair.flatten(-2)
+        # Flatten the last two dims back to d_k: (..., seq_len, d_k)
+        return out_pair.flatten(-2)
     
