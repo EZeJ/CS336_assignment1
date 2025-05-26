@@ -45,28 +45,37 @@ def get_cross_entropy_loss(inputs: Float[Tensor, " batch_size vocab_size"], targ
     # More explaination of the target_logits indexing:
     # Here are two flattened tensors:
     # Inputs = 
-    # tensor([[0.1088, 0.1060, 0.6683, 0.5131, 0.0645],
-    #     [0.4538, 0.6852, 0.2520, 0.3792, 0.2675],
-    #     [0.4578, 0.3357, 0.6384, 0.0481, 0.5612],
-    #     [0.9639, 0.8864, 0.1585, 0.3038, 0.0350],
-    #     [0.3356, 0.9013, 0.7052, 0.8294, 0.8334],
-    #     [0.6333, 0.4434, 0.1428, 0.5739, 0.3810],
-    #     [0.9476, 0.5917, 0.7037, 0.2987, 0.6208],
-    #     [0.8541, 0.1803, 0.2054, 0.4775, 0.8199]])
+    #       tensor([[0.1088, 0.1060, 0.6683, 0.5131, 0.0645],
+    #           [0.4538, 0.6852, 0.2520, 0.3792, 0.2675],
+    #            [0.4578, 0.3357, 0.6384, 0.0481, 0.5612],
+    #            [0.9639, 0.8864, 0.1585, 0.3038, 0.0350],
+    #            [0.3356, 0.9013, 0.7052, 0.8294, 0.8334],
+    #            [0.6333, 0.4434, 0.1428, 0.5739, 0.3810],
+    #            [0.9476, 0.5917, 0.7037, 0.2987, 0.6208],
+    #            [0.8541, 0.1803, 0.2054, 0.4775, 0.8199]])
+    #
     # Targets = 
-    # tensor([1, 0, 2, 2, 4, 1, 4, 0])
+    #       tensor([1, 0, 2, 2, 4, 1, 4, 0])
+    #
     # torch.arange(inputs.shape[0]) =
-    # tensor([0, 1, 2, 3, 4, 5, 6, 7])
+    #       tensor([0, 1, 2, 3, 4, 5, 6, 7])
+    #
     # Inputs.shape[0] is the batch size.
+    #
     # What logits[torch.arange(inputs.shape[0]), targets] does is,
     # we pick every row of the logits tensor, and for each row, we pick the column
     # corresponding to the target class.
     # same as a for loop as 
-    # target_logits[i] = logits[i, targets[i]] for i in range(inputs.shape[0])
+    #
+    # target_logits[i] = 
+    #       logits[i, targets[i]] for i in range(inputs.shape[0])
+    #
 
     # Cross-entropy: - (target logit - log sum exp)
     loss = -target_logits + log_sum_exp
-
     return loss.mean()
 
 
+def get_perplexity(inputs: Float[Tensor, " batch_size vocab_size"], targets: Int[Tensor, " batch_size"]) -> Float[Tensor, ""]:
+    loss = get_cross_entropy_loss(inputs, targets)
+    return torch.exp(loss)
