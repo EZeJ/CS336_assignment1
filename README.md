@@ -10,24 +10,54 @@ Code in `cs336_basics/BPE_tokenizer.py`
 ![alt text](images/trainig_time_of_tinyStores.png)
 
 ## Part 2: Transformer's structures
-# Passed All Tests of Part 2
+### Passed All Tests of Part 2
 ![alt text](images/transformer_structures.png)
 
 
 # Extra Notes:
 
-## Use pytest-profiling + snakeviz to check runtime bottleneck
+## 1. Use pytest-profiling + snakeviz to check runtime bottleneck
 1. Install
-`uv pip install pytest-profiling`
-`uv pip install snakeviz`
+
+
+        uv pip install pytest-profiling
+
+
+        uv pip install snakeviz
 
 2. Run
-`pytest --profile tests/test_model.py`
-`snakeviz prof/combined.prof`
+
+        pytest --profile tests/test_model.py
+
+
+        snakeviz prof/combined.prof
 
 3. Example:
 ![alt text](images/snakeviz_example.png)
 # CS336 Spring 2025 Assignment 1: Basics
+
+## 2. Enable VSCode Debugger
+1. Enable Testing with pytest on VSCode
+    1. Go to Testing (beaker icon on the left sidebar)
+    2. Click "Configure Python Tests"
+        1. ![alt text](images/vscode_test_imgs/image.png)
+    4. Choose pytest:
+        1. ![alt text](images/vscode_test_imgs/image-1.png)
+    5. Choose the folder that has tests file.
+        1. ![alt text](images/vscode_test_imgs/image_test_folder.png)
+    5. If you want to re-configure the test or use command directly. 
+        1. Open Command Palette by: 
+            1. Press Cmd + Shift + P (Mac) or Ctrl + Shift + P (Windows/Linux)
+        3. Search for:
+            1. Python: Configure Tests
+            2. Select the correct test framework (pytest), and when prompted, choose the correct folder that contains your tests
+    6. Note: If you clicked the Hide Test, use the filter icon to bring it back.:
+
+        1. ![alt text](images/vscode_test_imgs/image_filter.png)
+
+2. Use Breakpoint in Debug Window, Enjoy.
+![alt text](images/vscode_test_imgs/debug_window.png)
+
 
 For a full description of the assignment, see the asssignment handout at
 [cs336_spring2025_assignment1_basics.pdf](./cs336_spring2025_assignment1_basics.pdf)
