@@ -6,6 +6,8 @@ from cs336_basics.Transformers_cs336 import transformer as my_tf
 from collections.abc import Callable
 from typing import Optional
 import math
+from collections.abc import Iterable
+
 
 
 def get_lr_cosine_schedule(
@@ -39,16 +41,26 @@ def get_lr_cosine_schedule(
         )
     
 
+def get_gradient_clipping(
+        parameters: Iterable[torch.nn.Parameter], 
+        max_l2_norm: float,
+        eps: float = 1e-6
+    ) -> None:
+    # Normalization is on all gradients at once, not per parameter.
+    # Compute total norm
+    total_norm_sq = 0.0
+    for p in parameters:
+        if p.grad is not None:
+            param_norm = p.grad.data.norm(2)
+            total_norm_sq += param_norm.item() ** 2
+    total_norm = total_norm_sq ** 0.5
 
-
-
-
-
-
-
-
-
-
+    # Compute clipping coefficient
+    clip_coef = max_l2_norm / (total_norm + eps)
+    if clip_coef < 1:
+        for p in parameters:
+            if p.grad is not None:
+                p.grad.data.mul_(clip_coef)
 
 
 class SGD(torch.optim.Optimizer):
