@@ -7,6 +7,50 @@ from collections.abc import Callable
 from typing import Optional
 import math
 
+
+def get_lr_cosine_schedule(
+    t: int,
+    max_learning_rate: float,
+    min_learning_rate: float,
+    warmup_iters: int,
+    cosine_cycle_iters: int,
+):
+    """
+    A scheduler is simply a function that takes the current step t and other relevant parameters 
+    (such as the initial and final learning rates), and returns the learning rate to use for the gradient 
+    update at step t. The simplest schedule is the constant function, which will return the same learning rate given any t.
+
+    The cosine annealing learning rate schedule takes (i) the current iteration t, (ii) the maximum learning 
+    rate α max , (iii) the minimum (final) learning rate α min , (iv) the number of warm-up iterations T w 
+    , and (v) the number of cosine annealing iterations T c . The learning rate at iteration t is defined as:
+    """
+
+    if t < warmup_iters:
+        return t / warmup_iters * max_learning_rate
+    elif t > cosine_cycle_iters:
+        return min_learning_rate
+    else:
+        # when t >= warmup_iters and t <= cosine_cycle_iters:
+        return (
+            min_learning_rate
+            + 0.5
+            * (1 + math.cos(math.pi * (t - warmup_iters) / (cosine_cycle_iters - warmup_iters)))
+            * (max_learning_rate - min_learning_rate)
+        )
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
 class SGD(torch.optim.Optimizer):
     def __init__(self, params, lr=1e-3):
         if lr < 0:
