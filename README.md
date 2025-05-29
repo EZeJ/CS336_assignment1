@@ -3,17 +3,16 @@
 # My solutions for Stanford CS336 Assignment 1
 
 ## Part 1: BPE Tokenizer
-### Passed All Tests of Part 1
 ![alt text](images/part1_output.png)
 Code in `cs336_basics/BPE_tokenizer.py`
 ### Trainig Time of TinyStores
 ![alt text](images/trainig_time_of_tinyStores.png)
 
 ## Part 2: Transformer's structures
-### Passed All Tests of Part 2
 ![alt text](images/transformer_structures.png)
 
-
+## Part 3: Training support methods
+![alt text](images/Optimizer.png)
 # Extra Notes:
 
 ## 1. Use pytest-profiling + snakeviz to check runtime bottleneck
@@ -34,7 +33,6 @@ Code in `cs336_basics/BPE_tokenizer.py`
 
 3. Example:
 ![alt text](images/snakeviz_example.png)
-# CS336 Spring 2025 Assignment 1: Basics
 
 ## 2. Enable VSCode Debugger
 1. Enable Testing with pytest on VSCode
@@ -58,7 +56,7 @@ Code in `cs336_basics/BPE_tokenizer.py`
 2. Use Breakpoint in Debug Window, Enjoy.
 ![alt text](images/vscode_test_imgs/debug_window.png)
 
-
+# CS336 Spring 2025 Assignment 1: Basics
 For a full description of the assignment, see the asssignment handout at
 [cs336_spring2025_assignment1_basics.pdf](./cs336_spring2025_assignment1_basics.pdf)
 
