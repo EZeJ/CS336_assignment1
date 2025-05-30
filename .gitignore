@@ -71,6 +71,8 @@ instance/
 # Scrapy stuff:
 .scrapy
 
+uv.lock
+
 # ignore folders
 data/
 
