@@ -151,9 +151,9 @@ class AdamW(torch.optim.Optimizer):
                 beta1, beta2 = betas
 
                 # Initialize the momemtum vectors at t = 1.(Same as if they don't exist)
-                if "m" not in state and "v" not in state:
-                    # Initialize first and second moment estimates.
+                if "m" not in state:
                     state["m"] = torch.zeros_like(p.data)
+                if "v" not in state:
                     state["v"] = torch.zeros_like(p.data)
 
                 # Calculaiton of AdamW update.

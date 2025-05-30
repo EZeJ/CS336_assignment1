@@ -1,7 +1,8 @@
 # CS336 Spring 2025 Assignment 1: Basics
 
 # My solutions for Stanford CS336 Assignment 1
-
+## Passed all tests
+![alt text](images/pass_all_tests.png)
 ## Part 1: BPE Tokenizer
 ![alt text](images/part1_output.png)
 Code in `cs336_basics/BPE_tokenizer.py`
@@ -13,6 +14,9 @@ Code in `cs336_basics/BPE_tokenizer.py`
 
 ## Part 3: Training support methods
 ![alt text](images/Optimizer.png)
+
+## Part 4: Tools methods
+![alt text](images/tools.png)
 # Extra Notes:
 
 ## 1. Use pytest-profiling + snakeviz to check runtime bottleneck

@@ -2,4 +2,4 @@ import importlib.metadata
 
 __version__ = importlib.metadata.version("cs336_basics")
 
-from .tools import *
+from .Transformers_cs336.modules.tools import *
