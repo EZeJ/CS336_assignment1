@@ -116,7 +116,7 @@ class AdamW(torch.optim.Optimizer):
             params,
             lr=1e-3,
             weight_decay = 0.01,
-            betas=(0.9, 0.999),
+            betas=(0.9, 0.95),
             eps=1e-8
     ) -> None:
         if lr < 0:

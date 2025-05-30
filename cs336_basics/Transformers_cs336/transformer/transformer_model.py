@@ -135,8 +135,9 @@ class Transformer(torch.nn.Module):
 
         # 2. Create token position ids (used for RoPE)
         batch_size, seq_len = in_indices.shape
-        pos_ids = torch.arange(seq_len, device=in_indices.device)
-        pos_ids = repeat(pos_ids, 's -> b s', b=batch_size)
+        # pos_ids = torch.arange(seq_len, device=in_indices.device)
+        # pos_ids = repeat(pos_ids, 's -> b s', b=batch_size)
+        pos_ids = torch.arange(0, seq_len, device=in_indices.device)
 
         # 3. Pass through transformer layers
         for layer in self.transformer_layers:

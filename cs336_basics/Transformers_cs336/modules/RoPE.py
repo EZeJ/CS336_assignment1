@@ -88,6 +88,7 @@ class RotaryPositionalEmbedding(nn.Module):
         self.register_buffer("R", R, persistent=False)
         return None
 
+
     def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor:
         """
         Apply RoPE to input tensor x.

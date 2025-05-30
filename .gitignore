@@ -74,6 +74,9 @@ instance/
 # ignore folders
 data/
 
+cs336_basics/dataset/
+cs336_basics/checkpoints/
+
 # Sphinx documentation
 docs/_build/
 

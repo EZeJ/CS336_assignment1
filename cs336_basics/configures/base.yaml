@@ -1,0 +1,31 @@
+model:
+  d_model: 256
+  num_heads: 8
+  d_ff: 1024
+  num_layers: 6
+  vocab_size: 50257
+  context_length: 128
+  rope_theta: 10000.0
+
+optimizer:
+  learning_rate_max: 0.001
+  learning_rate_min: 0.0001
+  warmup_iters: 100
+  cosine_iters: 10000
+  weight_decay: 0.01
+
+training:
+  batch_size: 32
+  max_iters: 10000
+  log_every: 100
+  val_every: 1000
+  checkpoint_path: "checkpoints/model.pt"
+  device: "auto"
+
+dataset:
+  train_path: "dataset/train.bin"
+  val_path: "dataset/val.bin"
+  input_path: "data/TinyStoriesV2-GPT4-valid.txt"
+  vocab_out: "dataset/vocab.npy"
+  merges_out: "dataset/merges.npy"
+  special_tokens: ["<PAD>", "<UNK>", "<BOS>", "<EOS>", "<|endoftext|>"]

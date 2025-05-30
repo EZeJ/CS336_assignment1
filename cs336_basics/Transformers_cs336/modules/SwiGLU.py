@@ -59,24 +59,28 @@ class SwiGLU(nn.Module):
         self.dtype = dtype
 
         # Initialize weight matrices with Linear layers
-        self.w1 = Linear(
-            in_features=self.d_ff,
-            out_features=d_model,
-            device=self.device,
-            dtype=self.dtype,
-        )
-        self.w2 = Linear(
-            in_features=d_model,
-            out_features=self.d_ff,
-            device=self.device,
-            dtype=self.dtype,
-        )
-        self.w3 = Linear(
-            in_features=self.d_ff,
-            out_features=d_model,
-            device=self.device,
-            dtype=self.dtype,
-        )
+        self.w1 = Linear(in_features=d_model, out_features=self.d_ff, device=device, dtype=dtype)
+        self.w3 = Linear(in_features=d_model, out_features=self.d_ff, device=device, dtype=dtype)
+        self.w2 = Linear(in_features=self.d_ff, out_features=d_model, device=device, dtype=dtype)
+
+        # self.w1 = Linear(
+        #     in_features=self.d_ff,
+        #     out_features=d_model,
+        #     device=self.device,
+        #     dtype=self.dtype,
+        # )
+        # self.w2 = Linear(
+        #     in_features=d_model,
+        #     out_features=self.d_ff,
+        #     device=self.device,
+        #     dtype=self.dtype,
+        # )
+        # self.w3 = Linear(
+        #     in_features=self.d_ff,
+        #     out_features=d_model,
+        #     device=self.device,
+        #     dtype=self.dtype,
+        # )
 
     def _compute_d_ff(d_model: int) -> int:
         """
