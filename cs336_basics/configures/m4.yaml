@@ -23,12 +23,12 @@ training:
   device: "mps"
 
 dataset:
-  input_path: "./data/TinyStoriesV2-GPT4-valid.txt"
-  # input_path: "./data/TinyStories-train.txt"
+  # input_path: "./data/TinyStoriesV2-GPT4-valid.txt"
+  input_path: "./data/TinyStories-train.txt"
   train_path: "./cs336_basics/dataset/train_m4.bin"
   val_path: "./cs336_basics/dataset/val_m4.bin"
-  vocab_out: "./cs336_basics/dataset/vocab_m4.npy"
-  merges_out: "./cs336_basics/dataset/merges_m4.npy"
+  vocab_out: "./cs336_basics/dataset/vocab_m4.json"
+  merges_out: "./cs336_basics/dataset/merges_m4.txt"
   special_tokens: ["<|endoftext|>"]  
 
 # "<PAD>", "<UNK>", "<BOS>", "<EOS>"

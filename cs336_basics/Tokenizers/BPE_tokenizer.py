@@ -257,7 +257,7 @@ class Tokenizer:
 
         segments = re.split(split_pattern, text) if split_pattern else [text]
 
-        for segment in segments:
+        for segment in tqdm(segments, desc="Encoding segments"):
             if segment == "":
                 continue
             b = segment.encode("utf-8")
