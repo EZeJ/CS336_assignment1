@@ -76,6 +76,8 @@ uv.lock
 # ignore folders
 data/
 
+wandb/
+
 cs336_basics/dataset/
 cs336_basics/checkpoints/
 
