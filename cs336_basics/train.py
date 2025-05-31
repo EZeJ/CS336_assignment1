@@ -25,15 +25,11 @@ def main():
     # if we need to debug, we can wait for the debugger to attach
     # my_tf.modules.wait_for_debugger(port=5678, host="localhost")
 
-
-
     # Load config
-    config = load_config("./cs336_basics/configures/m4.yaml")
+    config = load_config("./cs336_basics/configures/40000_epoochs.yaml")
 
     wandb_flag = config["training"]['wandb']
 
-    if wandb_flag:
-        wandb.init(project=config["training"]['wandb_project'], config=config)
     device = detect_device() if config["training"]["device"] == "auto" else config["training"]["device"]
 
     # Load dataset
@@ -55,6 +51,11 @@ def main():
         theta=config["model"]["rope_theta"],
         device=device
     ).to(device)
+
+    if wandb_flag:
+        wandb.init(project=config["training"]['wandb_project'], config=config)
+    
+
     model.train()
 
     # Create optimizer
@@ -64,6 +65,7 @@ def main():
         weight_decay=float(config["optimizer"]["weight_decay"])
     )
 
+    
     # Training loop
     for it in range(config["training"]["max_iters"]):
         # Update LR
@@ -74,7 +76,7 @@ def main():
             config["optimizer"]["warmup_iters"],
             config["optimizer"]["cosine_iters"]
         )
-        
+
         for group in optimizer.param_groups:
             group["lr"] = lr
 

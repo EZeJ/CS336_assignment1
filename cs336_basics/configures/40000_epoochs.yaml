@@ -8,19 +8,19 @@ model:
   rope_theta: 10000.0     # Keep same
 
 optimizer:
-  learning_rate_max: 2e-4
+  learning_rate_max: 3e-4
   learning_rate_min: 1e-5
-  warmup_iters: 2000
-  cosine_iters: 20000       # same as total training steps
+  warmup_iters: 3000
+  cosine_iters: 40000       # same as total training steps
   weight_decay: 0.001
   max_l2_norm: 0.2
 
 training:
-  batch_size: 200            # 32 × 5000 × 256 = 40,960,000 tokens
-  max_iters: 20000
-  log_every: 5
+  batch_size: 240            # 32 × 5000 × 256 = 40,960,000 tokens
+  max_iters: 40000
+  log_every: 500
   val_every: 500
-  checkpoint_path: "./cs336_basics/checkpoints/m4_model_v2.pt"
+  checkpoint_path: "./cs336_basics/checkpoints/m4_model_v3_30000_epoches.pt"
   device: "auto"
   wandb: true
   wandb_project: "cs336_A1"
