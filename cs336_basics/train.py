@@ -8,6 +8,18 @@ import cs336_basics.Transformers_cs336 as my_tf
 import wandb
 
 
+import argparse
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Training script for CS336 model.")
+    parser.add_argument(
+        "--yaml_path",
+        type=str,
+        default="./cs336_basics/configures/40000_epoochs.yaml",
+        help="Path to the YAML configuration file."
+    )
+    return parser.parse_args()
+
 
 def detect_device() -> str:
     if torch.cuda.is_available():
@@ -24,9 +36,10 @@ def main():
 
     # if we need to debug, we can wait for the debugger to attach
     # my_tf.modules.wait_for_debugger(port=5678, host="localhost")
+    args = parse_args()
 
     # Load config
-    config = load_config("./cs336_basics/configures/40000_epoochs.yaml")
+    config = load_config(args.yaml_path)
 
     wandb_flag = config["training"]['wandb']
 

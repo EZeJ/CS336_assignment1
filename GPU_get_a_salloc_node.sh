@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --account=def-mheywood
-#SBATCH --time=6:50:00
+#SBATCH --time=4:00:00
 #SBATCH --gres=gpu:a100
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=2
 #SBATCH --mem=30G
 #SBATCH --mail-user=zs549061@dal.ca
 #SBATCH --mail-type=BEGIN
