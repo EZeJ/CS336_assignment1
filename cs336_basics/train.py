@@ -29,7 +29,11 @@ def main():
 
     # Load config
     config = load_config("./cs336_basics/configures/m4.yaml")
-    wandb.init(project="CS336_A1", config=config)
+
+    wandb_flag = config["training"]['wandb']
+
+    if wandb_flag:
+        wandb.init(project=config["training"]['wandb_project'], config=config)
     device = detect_device() if config["training"]["device"] == "auto" else config["training"]["device"]
 
     # Load dataset
@@ -94,7 +98,8 @@ def main():
         optimizer.step()
 
         # print(f"Step {it}: loss = {loss.item():.4f}, lr = {lr:.6f}")
-        wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": it})
+        if wandb_flag:
+            wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": it})
 
         # Logging
         if it % config["training"]["log_every"] == 0:
@@ -112,7 +117,9 @@ def main():
                 )
                 logits_val = model(x_val)
                 val_loss = my_tf.modules.get_cross_entropy_loss(logits_val[:, -1, :], y_val[:, -1])
-                wandb.log({"val/loss": val_loss.item(), "step": it})
+                
+                if wandb_flag:
+                    wandb.log({"val/loss": val_loss.item(), "step": it})
                 print(f"[Validation] Step {it}: val_loss = {val_loss.item():.4f}")
             model.train()
 

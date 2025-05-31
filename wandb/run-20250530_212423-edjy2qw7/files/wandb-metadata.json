@@ -1,0 +1,44 @@
+{
+  "os": "macOS-15.5-arm64-arm-64bit",
+  "python": "CPython 3.11.12",
+  "startedAt": "2025-05-31T01:24:23.748367Z",
+  "program": "/Users/ethanj/Documents/CS336/CS336_assignment1/cs336_basics/train.py",
+  "codePath": "cs336_basics/train.py",
+  "git": {
+    "remote": "git@github.com:EZeJ/CS336_assignment1.git",
+    "commit": "61ba29bc9aad8ae4d1959f642f5a7a6c35c438c2"
+  },
+  "email": "will.jia.sheng@gmail.com",
+  "root": "/Users/ethanj/Documents/CS336/CS336_assignment1",
+  "host": "EthanJs-Mac-mini.local",
+  "executable": "/Users/ethanj/Documents/CS336/CS336_assignment1/.venv/bin/python3",
+  "codePathLocal": "cs336_basics/train.py",
+  "cpu_count": 10,
+  "cpu_count_logical": 10,
+  "disk": {
+    "/": {
+      "total": "2000189177856",
+      "used": "904807931904"
+    },
+    "/System/Volumes/Data": {
+      "total": "2000189177856",
+      "used": "904807931904"
+    }
+  },
+  "memory": {
+    "total": "17179869184"
+  },
+  "cpu": {
+    "count": 10,
+    "countLogical": 10
+  },
+  "apple": {
+    "name": "Apple M4",
+    "ecpuCores": 6,
+    "pcpuCores": 4,
+    "gpuCores": 10,
+    "memoryGb": 16,
+    "swapTotalBytes": "19327352832",
+    "ramTotalBytes": "17179869184"
+  }
+}

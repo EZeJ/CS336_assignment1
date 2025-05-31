@@ -21,7 +21,9 @@ training:
   log_every: 500
   val_every: 500
   checkpoint_path: "./cs336_basics/checkpoints/m4_model_v2.pt"
-  device: "cuda"
+  device: "auto"
+  wandb: true
+  wandb_project: "cs336_A1"
 
 dataset:
   # input_path: "./data/TinyStoriesV2-GPT4-valid.txt"
