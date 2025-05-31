@@ -37,6 +37,8 @@ def main():
     # if we need to debug, we can wait for the debugger to attach
     # my_tf.modules.wait_for_debugger(port=5678, host="localhost")
     args = parse_args()
+    
+    torch.set_float32_matmul_precision('high')
 
     # Load config
     config = load_config(args.yaml_path)
@@ -64,6 +66,14 @@ def main():
         theta=config["model"]["rope_theta"],
         device=device
     ).to(device)
+
+    #torch.compile(model) wraps your PyTorch model and applies a compilation pipeline that:
+	# •	Traces your model using Python bytecode analysis (via TorchDynamo),
+	# •	Optimizes the computation graph (e.g., operator fusion),
+	# •	Compiles parts of it to efficient backend code (e.g., using nvFuser, inductor, or others),
+	# •	Runs with much better performance (ideally without changing your model code).
+
+    model = torch.compile(model)
 
     if wandb_flag:
         wandb.init(project=config["training"]['wandb_project'], config=config)

@@ -10,17 +10,17 @@ model:
 optimizer:
   learning_rate_max: 3e-4
   learning_rate_min: 1e-5
-  warmup_iters: 3000
-  cosine_iters: 40000       # same as total training steps
+  warmup_iters: 5000
+  cosine_iters: 60000       # same as total training steps
   weight_decay: 0.001
   max_l2_norm: 0.2
 
 training:
-  batch_size: 240            # 31G VRam 32 × 5000 × 256 = 40,960,000 tokens
-  max_iters: 40000
+  batch_size: 300            # 31G VRam 32 × 5000 × 256 = 40,960,000 tokens
+  max_iters: 60000
   log_every: 500
   val_every: 500
-  checkpoint_path: "./cs336_basics/checkpoints/m4_model_v3_30000_epoches.pt"
+  checkpoint_path: "./cs336_basics/checkpoints/m4_model_v4_40000_epoches_wth_torch_compile.pt"
   device: "auto"
   wandb: true
   wandb_project: "cs336_A1"
