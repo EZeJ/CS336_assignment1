@@ -5,6 +5,9 @@ import torch
 import numpy as np
 from torch import nn
 import cs336_basics.Transformers_cs336 as my_tf
+import wandb
+
+
 
 def detect_device() -> str:
     if torch.cuda.is_available():
@@ -18,14 +21,24 @@ def load_config(path):
         return yaml.safe_load(f)
 
 def main():
+
+    # if we need to debug, we can wait for the debugger to attach
+    # my_tf.modules.wait_for_debugger(port=5678, host="localhost")
+
+
+
     # Load config
     config = load_config("./cs336_basics/configures/m4.yaml")
+    wandb.init(project="CS336_A1", config=config)
     device = detect_device() if config["training"]["device"] == "auto" else config["training"]["device"]
 
     # Load dataset
     train_data = np.memmap(config["dataset"]["train_path"], dtype=np.uint16, mode="r")
     val_data = np.memmap(config["dataset"]["val_path"], dtype=np.uint16, mode="r")
 
+    # max_l2_norm
+    max_l2_norm = config["optimizer"]["max_l2_norm"]
+    
     # Create model
     model = my_tf.transformer.Transformer(
         d_model=config["model"]["d_model"],
@@ -43,24 +56,21 @@ def main():
     # Create optimizer
     optimizer = my_tf.modules.AdamW(
         model.parameters(),
-        lr=config["optimizer"]["learning_rate_max"],
-        weight_decay=config["optimizer"]["weight_decay"]
+        lr=float(config["optimizer"]["learning_rate_max"]),
+        weight_decay=float(config["optimizer"]["weight_decay"])
     )
 
     # Training loop
     for it in range(config["training"]["max_iters"]):
         # Update LR
-        if it > 0:
-            lr = my_tf.modules.get_lr_cosine_schedule(
-                it,
-                config["optimizer"]["learning_rate_max"],
-                config["optimizer"]["learning_rate_min"],
-                config["optimizer"]["warmup_iters"],
-                config["optimizer"]["cosine_iters"]
-            )
-        else:
-            lr = config["optimizer"]["learning_rate_min"]
-            
+        lr = my_tf.modules.get_lr_cosine_schedule(
+            it,
+            float(config["optimizer"]["learning_rate_max"]),
+            float(config["optimizer"]["learning_rate_min"]),
+            config["optimizer"]["warmup_iters"],
+            config["optimizer"]["cosine_iters"]
+        )
+        
         for group in optimizer.param_groups:
             group["lr"] = lr
 
@@ -79,15 +89,18 @@ def main():
 
         # Backpropagation
         optimizer.zero_grad()
-        loss.backward()
-        my_tf.modules.get_gradient_clipping(model.parameters(), max_l2_norm=1.0)
+        loss.backward() 
+        my_tf.modules.get_gradient_clipping(model.parameters(), max_l2_norm=max_l2_norm)
         optimizer.step()
+
+        # print(f"Step {it}: loss = {loss.item():.4f}, lr = {lr:.6f}")
+        wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": it})
 
         # Logging
         if it % config["training"]["log_every"] == 0:
             print(f"Step {it}: loss = {loss.item():.4f}, lr = {lr:.6f}")
 
-        # Validation
+        # Validationls
         if it % config["training"]["val_every"] == 0 and it > 0:
             model.eval()
             with torch.no_grad():
@@ -99,6 +112,7 @@ def main():
                 )
                 logits_val = model(x_val)
                 val_loss = my_tf.modules.get_cross_entropy_loss(logits_val[:, -1, :], y_val[:, -1])
+                wandb.log({"val/loss": val_loss.item(), "step": it})
                 print(f"[Validation] Step {it}: val_loss = {val_loss.item():.4f}")
             model.train()
 
