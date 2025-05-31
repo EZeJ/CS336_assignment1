@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-mheywood
-#SBATCH --time=0-0:55:00                # Up to 10 hours
+#SBATCH --time=6:55:00                # Up to 10 hours
 #SBATCH --gres=gpu:a100
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=30G
@@ -12,4 +12,4 @@
 module load python/3.11
 cd /project/def-mheywood/zeshengj/test/CS336_assignment1/
 source .venv/bin/activate
-uv run cs336_basics/train.py
+uv run cs336_basics/train.py --yaml_path /projects/def-mheywood/zeshengj/test/CS336_assignment1/cs336_basics/configures/30000.yaml

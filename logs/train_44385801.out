@@ -1,0 +1,3 @@
+wandb: Tracking run with wandb version 0.19.11
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+slurmstepd: error: *** JOB 44385801 ON ng10712 CANCELLED AT 2025-05-31T09:41:27 ***
