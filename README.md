@@ -1,6 +1,13 @@
 # CS336 Spring 2025 Assignment 1: Basics
 
 # My solutions for Stanford CS336 Assignment 1
+![alt text](images/train_loss.png)
+![alt text](images/lr.png) 
+![alt text](images/val_loss.png)
+![alt text](images/GPU_temperature.png) 
+![alt text](images/GPU_Utilization.png) 
+![alt text](images/GPU_memory_allocated_bytes.png) 
+![alt text](images/GPU_time_accessing_memory.png) 
 ## Passed all tests
 ![alt text](images/pass_all_tests.png)
 ## Part 1: BPE Tokenizer
