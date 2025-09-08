@@ -210,7 +210,25 @@ class Tokenizer:
 
         with open(vocab_filepath, "r") as vf:
             vocab_data = json.load(vf)
-            vocab = {int(i): bytes(v, "latin1") for v, i in vocab_data.items()}
+            # Handle both formats: {token_id_str: token_str} and {token_str: token_id_str}
+            if all(key.isdigit() for key in vocab_data.keys()):
+                # Format: {token_id_str: token_str}
+                vocab = {}
+                for k, v in vocab_data.items():
+                    try:
+                        vocab[int(k)] = bytes(v, "latin1")
+                    except UnicodeEncodeError:
+                        # Handle Unicode characters that can't be encoded as latin-1
+                        vocab[int(k)] = v.encode('utf-8')
+            else:
+                # Format: {token_str: token_id_str} 
+                vocab = {}
+                for v, i in vocab_data.items():
+                    try:
+                        vocab[int(i)] = bytes(v, "latin1")
+                    except UnicodeEncodeError:
+                        # Handle Unicode characters that can't be encoded as latin-1
+                        vocab[int(i)] = v.encode('utf-8')
 
         merges = []
         with open(merges_filepath, "r") as mf:
@@ -218,7 +236,12 @@ class Tokenizer:
                 if line.strip() and not line.startswith("#"):
                     parts = line.strip().split()
                     if len(parts) == 2:
-                        merges.append((bytes(parts[0], "latin1"), bytes(parts[1], "latin1")))
+                        try:
+                            merge_tuple = (bytes(parts[0], "latin1"), bytes(parts[1], "latin1"))
+                        except UnicodeEncodeError:
+                            # Handle Unicode characters that can't be encoded as latin-1
+                            merge_tuple = (parts[0].encode('utf-8'), parts[1].encode('utf-8'))
+                        merges.append(merge_tuple)
 
         return cls(vocab, merges, special_tokens)
 

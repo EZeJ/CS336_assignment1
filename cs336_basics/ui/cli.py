@@ -161,6 +161,10 @@ class InteractiveCLI:
                 self._print_error("No model configuration found")
                 return
             
+            # Infer model configuration from checkpoint
+            inferred_config = self._infer_model_config(checkpoint)
+            model_config.update(inferred_config)  # Override config with checkpoint dimensions
+            
             # Create model
             self.model = my_tf.transformer.Transformer(
                 d_model=model_config.get("d_model", 512),
@@ -176,9 +180,13 @@ class InteractiveCLI:
             
             # Load model weights
             if "model_state_dict" in checkpoint:
-                self.model.load_state_dict(checkpoint["model_state_dict"])
+                state_dict = checkpoint["model_state_dict"]
             else:
-                self.model.load_state_dict(checkpoint)
+                state_dict = checkpoint
+            
+            # Fix key mismatches between checkpoint and model
+            state_dict = self._fix_state_dict_keys(state_dict)
+            self.model.load_state_dict(state_dict, strict=False)
             
             self.model.to(self.device)
             self.model.eval()
@@ -446,6 +454,95 @@ Type your message and press Enter to start chatting!
             self._print_success(f"Conversation exported to {filename}")
         except Exception as e:
             self._print_error(f"Failed to export conversation: {e}")
+    
+    def _fix_state_dict_keys(self, state_dict: dict) -> dict:
+        """Fix state dict keys to match model architecture."""
+        fixed_state_dict = {}
+        
+        # Key mapping rules
+        key_mappings = {
+            '_orig_mod.token_embeddings.weight': 'embedding.weight',
+            '_orig_mod.lm_head.weight': 'lm_head.weight', 
+            '_orig_mod.ln_final.weight': 'RMSNorm_ln_final.weight',
+        }
+        
+        for old_key, value in state_dict.items():
+            new_key = old_key
+            
+            # Handle direct mappings
+            if old_key in key_mappings:
+                new_key = key_mappings[old_key]
+            
+            # Handle layer-specific mappings
+            elif old_key.startswith('_orig_mod.layers.'):
+                # Extract layer number and component
+                parts = old_key.split('.')
+                layer_num = parts[2]  # layers.{N}
+                component = '.'.join(parts[3:])  # rest of the path
+                
+                # Map component names
+                if component == 'ln1.weight':
+                    new_key = f'transformer_layers.{layer_num}.RMSNorm_ln1.weight'
+                elif component == 'ln2.weight':
+                    new_key = f'transformer_layers.{layer_num}.RMSNorM_ln2.weight'
+                elif component == 'attn.q_proj.weight':
+                    new_key = f'transformer_layers.{layer_num}.multihead_self_attention.q_proj_weight.weight'
+                elif component == 'attn.k_proj.weight':
+                    new_key = f'transformer_layers.{layer_num}.multihead_self_attention.k_proj_weight.weight'
+                elif component == 'attn.v_proj.weight':
+                    new_key = f'transformer_layers.{layer_num}.multihead_self_attention.v_proj_weight.weight'
+                elif component == 'attn.output_proj.weight':
+                    new_key = f'transformer_layers.{layer_num}.multihead_self_attention.o_proj_weight.weight'
+                elif component == 'ffn.w1.weight':
+                    new_key = f'transformer_layers.{layer_num}.SwiGLU_ffn.w1.weight'
+                elif component == 'ffn.w2.weight':
+                    new_key = f'transformer_layers.{layer_num}.SwiGLU_ffn.w2.weight'
+                elif component == 'ffn.w3.weight':
+                    new_key = f'transformer_layers.{layer_num}.SwiGLU_ffn.w3.weight'
+            
+            fixed_state_dict[new_key] = value
+        
+        return fixed_state_dict
+    
+    def _infer_model_config(self, checkpoint: dict) -> dict:
+        """Infer model configuration from checkpoint tensor shapes."""
+        config = {}
+        
+        # Find embedding weight to get d_model and vocab_size
+        for key, tensor in checkpoint.items():
+            if 'token_embeddings.weight' in key or 'embedding.weight' in key:
+                config['vocab_size'] = tensor.shape[0]
+                config['d_model'] = tensor.shape[1]
+                
+        # Find FFN weight to get d_ff
+        for key, tensor in checkpoint.items():
+            if '.ffn.w1.weight' in key or 'SwiGLU_ffn.w1.weight' in key:
+                config['d_ff'] = tensor.shape[0]
+                break
+        
+        # Count number of layers
+        layer_count = 0
+        for key in checkpoint.keys():
+            if '.layers.' in key or 'transformer_layers.' in key:
+                if '.layers.' in key:
+                    layer_num = int(key.split('.layers.')[1].split('.')[0])
+                else:
+                    layer_num = int(key.split('transformer_layers.')[1].split('.')[0])
+                layer_count = max(layer_count, layer_num + 1)
+        config['num_layers'] = layer_count
+        
+        # Infer num_heads (assume d_model is divisible by num_heads and head_dim is common size)
+        d_model = config.get('d_model', 64)
+        common_head_dims = [32, 64, 128]  # Common head dimensions
+        for head_dim in common_head_dims:
+            if d_model % head_dim == 0:
+                config['num_heads'] = d_model // head_dim
+                break
+        else:
+            # Fallback: assume 8 heads
+            config['num_heads'] = min(8, d_model // 8) if d_model >= 64 else d_model // 16
+        
+        return config
     
     def _generate_response(self, user_input: str) -> str:
         """Generate response to user input."""
