@@ -44,6 +44,30 @@ def compile_transformer(
         logger.warning("torch.compile not available, returning uncompiled model")
         return model
     
+    # Check device compatibility and adjust backend
+    device_type = None
+    for param in model.parameters():
+        device_type = param.device.type
+        break
+    
+    # Adjust backend based on device compatibility
+    if device_type == "mps":
+        # MPS doesn't fully support inductor backend yet
+        if backend == "inductor":
+            if disable_on_unsupported:
+                logger.warning("Inductor backend not fully supported on MPS, skipping compilation")
+                return model
+            else:
+                # Try aot_eager as fallback for MPS
+                backend = "aot_eager"
+                logger.info("Switching to aot_eager backend for MPS compatibility")
+    elif device_type == "cpu":
+        # CPU works well with inductor
+        pass
+    elif device_type == "cuda":
+        # CUDA works well with inductor
+        pass
+    
     try:
         compiled_model = torch.compile(
             model,
