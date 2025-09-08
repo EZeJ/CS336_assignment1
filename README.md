@@ -1,4 +1,108 @@
-# CS336 Spring 2025 Assignment 1: Basics
+# CS336 Spring 2025 Assignment 1: Enhanced Transformer Implementation
+
+## 🚀 **NEW: Interactive Chat Interface & Advanced Features**
+
+This implementation now includes a comprehensive interactive system with both CLI and web interfaces for chatting with your trained transformer models!
+
+### **🎯 Quick Start - Interactive Chat**
+
+```bash
+# Auto-discover model files and launch CLI chat
+python -m cs336_basics.interactive cli --auto-discover
+
+# Launch web interface on http://localhost:5000
+python -m cs336_basics.interactive web --auto-discover
+
+# Launch both interfaces simultaneously
+python -m cs336_basics.interactive both --auto-discover
+```
+
+### **✨ Enhanced Features Added**
+
+#### **🤖 Interactive Interfaces**
+- **Rich CLI Interface**: Beautiful terminal chat with configuration, statistics, history export
+- **Web Interface**: Modern browser-based chat with real-time generation and parameter tuning
+- **Conversation Management**: History tracking, export to JSON, session management
+
+#### **⚡ Performance Optimizations**
+- **Mixed Precision Training**: FP16/BF16 support with automatic loss scaling
+- **KV-Cache**: Efficient autoregressive generation with key-value caching  
+- **Torch Compile**: Automatic JIT compilation for 2x+ speedup
+- **Gradient Checkpointing**: Memory-efficient training for larger models
+
+#### **🎛️ Advanced Generation Features**
+- **Multiple Sampling Strategies**: Greedy, Top-k, Top-p (Nucleus), Temperature, Mixed
+- **Real-time Parameter Adjustment**: Change temperature, top-p, max tokens on the fly
+- **Generation Statistics**: Track tokens/second, memory usage, cache efficiency
+- **Streaming Generation**: Real-time token generation with typing indicators
+
+#### **💾 Enhanced Infrastructure**
+- **Advanced Checkpointing**: Automatic checkpoint rotation, best model tracking
+- **Configuration Management**: YAML-based configs with auto-discovery
+- **Comprehensive Logging**: Detailed performance metrics and debugging info
+- **Multi-device Support**: Optimized for CUDA, MPS (Apple Silicon), and CPU
+
+---
+
+## 📱 **Interface Usage Examples**
+
+### **Command Line Interface**
+```bash
+# Launch with specific model files
+python -m cs336_basics.interactive cli \
+    --model checkpoints/model.pt \
+    --vocab dataset/vocab.json \
+    --merges dataset/merges.txt \
+    --config configures/m4.yaml
+
+# Features: Rich terminal UI, conversation history, export, statistics
+```
+
+### **Web Interface**  
+```bash
+# Start web server
+python -m cs336_basics.interactive web --host 0.0.0.0 --port 8080
+
+# Features: Browser chat, real-time config, statistics dashboard, export
+```
+
+### **Advanced Configuration**
+```bash
+# Use specific device and enable debug mode
+python -m cs336_basics.interactive web \
+    --device cuda \
+    --debug \
+    --host localhost \
+    --port 5000
+```
+
+---
+
+## 🏗️ **Architecture Overview**
+
+### **New Module Structure**
+```
+cs336_basics/
+├── optimization/          # Performance enhancements
+│   ├── mixed_precision.py  # FP16/BF16 training
+│   ├── compilation.py      # Torch compile utilities
+│   └── checkpointing.py    # Advanced checkpoint management
+├── inference/             # Text generation engine
+│   ├── cache.py           # KV-cache implementation
+│   ├── generator.py       # Main generation engine
+│   ├── samplers.py        # Sampling strategies
+│   └── utils.py           # Inference utilities
+├── ui/                    # User interfaces
+│   ├── cli.py             # Rich terminal interface
+│   ├── web_app.py         # Flask web application
+│   ├── static/            # Web assets (CSS, JS)
+│   └── templates/         # HTML templates
+└── interactive.py         # Main interface launcher
+```
+
+---
+
+## 🧪 **Original CS336 Assignment Implementation**
 
 # My solutions for Stanford CS336 Assignment 1
 ![alt text](images/train_loss.png)

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS336 Transformer Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-robot"></i> CS336 Transformer Chat</h1>
+                <div class="header-actions">
+                    <button id="configBtn" class="btn btn-secondary" title="Configuration">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <button id="statsBtn" class="btn btn-secondary" title="Statistics">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button id="exportBtn" class="btn btn-secondary" title="Export Conversation">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button id="clearBtn" class="btn btn-danger" title="Clear Conversation">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Chat Area -->
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <div class="message assistant">
+                        <div class="message-content">
+                            <h3>Welcome to CS336 Transformer Chat! 🤖</h3>
+                            <p>I'm a transformer model ready to chat with you. You can:</p>
+                            <ul>
+                                <li>Ask me questions or have a conversation</li>
+                                <li>Adjust generation parameters using the settings button</li>
+                                <li>View statistics and export our conversation</li>
+                                <li>Clear the chat history anytime</li>
+                            </ul>
+                            <p>What would you like to talk about?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea 
+                        id="messageInput" 
+                        placeholder="Type your message here... (Shift+Enter for new line, Enter to send)"
+                        rows="1"
+                    ></textarea>
+                    <button id="sendBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-info">
+                <span id="statusText">Ready</span>
+                <span class="separator">|</span>
+                <span id="modelInfo">Model loaded</span>
+            </div>
+            <div class="generation-info">
+                <span id="generationTime"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div id="configModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generation Configuration</h3>
+                <span class="close" onclick="closeModal('configModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="config-group">
+                    <label for="maxTokens">Max New Tokens:</label>
+                    <input type="number" id="maxTokens" min="1" max="500" value="100">
+                    <small>Maximum number of tokens to generate</small>
+                </div>
+                
+                <div class="config-group">
+                    <label for="temperature">Temperature:</label>
+                    <input type="range" id="temperature" min="0.1" max="2.0" step="0.1" value="0.8">
+                    <span id="temperatureValue">0.8</span>
+                    <small>Controls randomness (0.1 = focused, 2.0 = creative)</small>
+                </div>
+                
+                <div class="config-group">
+                    <label for="topP">Top-p:</label>
+                    <input type="range" id="topP" min="0.1" max="1.0" step="0.05" value="0.9">
+                    <span id="topPValue">0.9</span>
+                    <small>Nucleus sampling threshold</small>
+                </div>
+                
+                <div class="config-group">
+                    <label for="topK">Top-k:</label>
+                    <input type="number" id="topK" min="0" max="100" value="" placeholder="None">
+                    <small>Limit vocabulary to top-k tokens (empty for none)</small>
+                </div>
+                
+                <div class="config-group">
+                    <label for="samplingStrategy">Sampling Strategy:</label>
+                    <select id="samplingStrategy">
+                        <option value="top_p">Top-p (Nucleus)</option>
+                        <option value="top_k">Top-k</option>
+                        <option value="mixed">Mixed</option>
+                        <option value="temperature">Temperature</option>
+                        <option value="greedy">Greedy</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('configModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveConfig()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Modal -->
+    <div id="statsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Generation Statistics</h3>
+                <span class="close" onclick="closeModal('statsModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid" id="statsContent">
+                    <!-- Stats will be populated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('statsModal')">Close</button>
+                <button class="btn btn-primary" onclick="refreshStats()">Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

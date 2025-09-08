@@ -20,6 +20,11 @@ dependencies = [
     "torch~=2.2.2; sys_platform == 'darwin' and platform_machine == 'x86_64'", # Intel Macs
     "tqdm>=4.67.1",
     "wandb>=0.19.7",
+    # Enhanced interactive features
+    "rich>=13.0.0", # rich terminal interface
+    "flask>=3.0.0", # web interface
+    "flask-cors>=4.0.0", # web interface CORS support
+    "pyyaml>=6.0", # YAML configuration files
 ]
 
 
