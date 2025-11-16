@@ -58,7 +58,8 @@ def scaled_dot_product_attention(
     # Einops Implementation of scaled dot-product attention
     d_k = Q.shape[-1]
     Q_T_K = einsum(Q, K, "... q d, ... k d -> ... q k")
-    Q_T_K_over_sqrt_d_k = Q_T_K / torch.sqrt(torch.tensor(d_k, dtype=Q.dtype)) # Scale the scores
+    # keep scaling tensor on the same device to avoid CPU/GPU mismatches
+    Q_T_K_over_sqrt_d_k = Q_T_K / torch.sqrt(torch.tensor(d_k, dtype=Q.dtype, device=Q.device)) # Scale the scores
     if mask is not None:
         Q_T_K_over_sqrt_d_k = Q_T_K_over_sqrt_d_k.masked_fill(mask == 0, float("-inf"))
 
