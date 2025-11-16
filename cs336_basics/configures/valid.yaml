@@ -22,6 +22,7 @@ training:
   val_every: 10
   checkpoint_path: "./cs336_basics/checkpoints/valid_smoke.pt"
   device: "auto"
+  tensorboard_logdir: "./cs336_basics/runs/valid"
   wandb: false
   wandb_project: "cs336_A1"
 

@@ -5,6 +5,7 @@ import yaml
 import torch
 import numpy as np
 from torch import nn
+from torch.utils.tensorboard import SummaryWriter
 import cs336_basics.Transformers_cs336 as my_tf
 import wandb
 
@@ -39,6 +40,8 @@ def main():
     config = load_config(args.config)
 
     wandb_flag = config["training"]['wandb']
+    tb_logdir = config["training"].get("tensorboard_logdir")
+    writer = SummaryWriter(tb_logdir) if tb_logdir else None
 
     if wandb_flag:
         wandb.init(project=config["training"]['wandb_project'], config=config)
@@ -114,6 +117,9 @@ def main():
         # print(f"Step {it}: loss = {loss.item():.4f}, lr = {lr:.6f}")
         if wandb_flag:
             wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": it})
+        if writer:
+            writer.add_scalar("train/loss", loss.item(), it)
+            writer.add_scalar("train/lr", lr, it)
 
         # Logging
         if it % config["training"]["log_every"] == 0:
@@ -137,6 +143,8 @@ def main():
                 
                 if wandb_flag:
                     wandb.log({"val/loss": val_loss.item(), "step": it})
+                if writer:
+                    writer.add_scalar("val/loss", val_loss.item(), it)
                 print(f"[Validation] Step {it}: val_loss = {val_loss.item():.4f}")
             model.train()
 
@@ -148,6 +156,10 @@ def main():
                 iteration=it,
                 out=config["training"]["checkpoint_path"]
             )
+
+    if writer:
+        writer.flush()
+        writer.close()
 
 if __name__ == "__main__":
     main()
