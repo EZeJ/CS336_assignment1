@@ -88,8 +88,10 @@ def main():
 
         # Forward
         logits = model(x)
-        logits_last = logits[:, -1, :]  # Predict final token
-        loss = my_tf.modules.get_cross_entropy_loss(logits_last, y[:, -1])
+        # Compute loss over all positions, not just the final token
+        logits_flat = logits.view(-1, logits.size(-1))
+        targets_flat = y.reshape(-1)
+        loss = my_tf.modules.get_cross_entropy_loss(logits_flat, targets_flat)
 
         # Backpropagation
         optimizer.zero_grad()
@@ -116,7 +118,10 @@ def main():
                     device=device
                 )
                 logits_val = model(x_val)
-                val_loss = my_tf.modules.get_cross_entropy_loss(logits_val[:, -1, :], y_val[:, -1])
+                val_loss = my_tf.modules.get_cross_entropy_loss(
+                    logits_val.view(-1, logits_val.size(-1)),
+                    y_val.reshape(-1)
+                )
                 
                 if wandb_flag:
                     wandb.log({"val/loss": val_loss.item(), "step": it})
