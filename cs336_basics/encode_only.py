@@ -40,10 +40,16 @@ def main():
         # saved mapping is token(str) -> id; rebuild id -> token(bytes)
         vocab = {int(v): k.encode("latin1") for k, v in vocab_json.items()}
 
-    # Load merges from text
-    with open(merges_path, "r", encoding="utf-8") as f:
-        merges = [tuple(line.strip().split()) for line in f]
-        merges = [(a.encode("latin1"), b.encode("latin1")) for a, b in merges]
+    # Load merges (prefer JSON array-of-pairs; fallback to whitespace-delimited text)
+    merges = []
+    try:
+        with open(merges_path, "r", encoding="utf-8") as f:
+            merge_json = json.load(f)
+            merges = [(a.encode("latin1"), b.encode("latin1")) for a, b in merge_json if len(a) and len(b)]
+    except (json.JSONDecodeError, TypeError):
+        with open(merges_path, "r", encoding="utf-8") as f:
+            merges = [tuple(line.strip().split()) for line in f if line.strip()]
+            merges = [(a.encode("latin1"), b.encode("latin1")) for a, b in merges]
 
     # Rebuild tokenizer
     tokenizer = Tokenizer(vocab=vocab, merges=merges, special_tokens=special_tokens)

@@ -16,10 +16,10 @@ def save_tokenizer(vocab, merges, vocab_out, merges_out):
     with open(vocab_out, "w") as f:
         json.dump(vocab_json, f)
 
-    # Save merges as text file
+    # Save merges as JSON array of pairs to preserve whitespace bytes safely
+    merges_json = [[a.decode("latin1"), b.decode("latin1")] for a, b in merges]
     with open(merges_out, "w") as f:
-        for a, b in merges:
-            f.write(f"{a.decode('latin1')} {b.decode('latin1')}\n")
+        json.dump(merges_json, f)
 
 def main():
     parser = argparse.ArgumentParser(description="Train BPE and encode dataset")

@@ -129,13 +129,13 @@ class TransformerBlock(torch.nn.Module):
         """
         # RMSNorm + MultiheadSelfAttention + Residual
         # y = in_features + MultiHeadSelfAttention(RMSNorm(in_features))
-        self.residual = in_features
-        self.x = self.RMSNorm_ln1(in_features)
-        self.x = self.multihead_self_attention(self.x, token_positions) + self.residual
+        residual = in_features
+        x = self.RMSNorm_ln1(in_features)
+        x = self.multihead_self_attention(x, token_positions) + residual
         # End of the first transformer block
         # RMSNorm + FeedForward SwiGLU + Residual
         # y = x + FeedForwardSwiGLU(RMSNorm(x))
-        self.residual_2 = self.x
-        self.x = self.RMSNorM_ln2(self.x)
-        self.x = self.SwiGLU_ffn(self.x) + self.residual_2
-        return self.x
+        residual_2 = x
+        x = self.RMSNorM_ln2(x)
+        x = self.SwiGLU_ffn(x) + residual_2
+        return x

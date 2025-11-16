@@ -212,13 +212,21 @@ class Tokenizer:
             vocab_data = json.load(vf)
             vocab = {int(i): bytes(v, "latin1") for v, i in vocab_data.items()}
 
-        merges = []
-        with open(merges_filepath, "r") as mf:
-            for line in mf:
-                if line.strip() and not line.startswith("#"):
-                    parts = line.strip().split()
-                    if len(parts) == 2:
-                        merges.append((bytes(parts[0], "latin1"), bytes(parts[1], "latin1")))
+        merges: list[tuple[bytes, bytes]] = []
+        # Prefer JSON array-of-pairs (lossless); fallback to whitespace-delimited text for compatibility
+        try:
+            with open(merges_filepath, "r") as mf:
+                merge_json = json.load(mf)
+                for pair in merge_json:
+                    if len(pair) == 2:
+                        merges.append((bytes(pair[0], "latin1"), bytes(pair[1], "latin1")))
+        except (json.JSONDecodeError, TypeError):
+            with open(merges_filepath, "r") as mf:
+                for line in mf:
+                    if line.strip() and not line.startswith("#"):
+                        parts = line.strip().split()
+                        if len(parts) == 2:
+                            merges.append((bytes(parts[0], "latin1"), bytes(parts[1], "latin1")))
 
         return cls(vocab, merges, special_tokens)
 
@@ -276,4 +284,3 @@ class Tokenizer:
     def decode(self, ids: list[int]) -> str:
         byte_seq = b"".join(self.byte_vocab[i] for i in ids)
         return byte_seq.decode("utf-8", errors="replace")
-
