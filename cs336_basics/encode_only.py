@@ -28,7 +28,8 @@ def main():
     # Load vocab from JSON
     with open(vocab_path, "r", encoding="utf-8") as f:
         vocab_json = json.load(f)
-        vocab = {v.encode("latin1"): int(k) for k, v in vocab_json.items()}
+        # saved mapping is token(str) -> id; rebuild id -> token(bytes)
+        vocab = {int(v): k.encode("latin1") for k, v in vocab_json.items()}
 
     # Load merges from text
     with open(merges_path, "r", encoding="utf-8") as f:
