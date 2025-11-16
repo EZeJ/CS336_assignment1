@@ -1,0 +1,34 @@
+model:
+  d_model: 128
+  num_heads: 4
+  d_ff: 512
+  num_layers: 2
+  vocab_size: 2000
+  context_length: 64
+  rope_theta: 10000.0
+
+optimizer:
+  learning_rate_max: 5e-4
+  learning_rate_min: 5e-5
+  warmup_iters: 50
+  cosine_iters: 500
+  weight_decay: 0.01
+  max_l2_norm: 0.2
+
+training:
+  batch_size: 8
+  max_iters: 20
+  log_every: 5
+  val_every: 10
+  checkpoint_path: "./cs336_basics/checkpoints/valid_smoke.pt"
+  device: "auto"
+  wandb: false
+  wandb_project: "cs336_A1"
+
+dataset:
+  input_path: "../data/TinyStoriesV2-GPT4-valid.txt"
+  train_path: "./cs336_basics/dataset/train_valid.bin"
+  val_path: "./cs336_basics/dataset/val_valid.bin"
+  vocab_out: "./cs336_basics/dataset/vocab_valid.json"
+  merges_out: "./cs336_basics/dataset/merges_valid.txt"
+  special_tokens: ["<|endoftext|>"]
