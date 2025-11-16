@@ -7,8 +7,8 @@ from jaxtyping import Float, Int
 import numpy.typing as npt
 import torch
 from torch import Tensor
-import cs336_basics.Tokenizers.BPE_tokenizer as bpe
-import cs336_basics.Transformers_cs336 as my_tf
+import llm_backbone.Tokenizers.BPE_tokenizer as bpe
+import llm_backbone.Transformers_cs336 as my_tf
 
 
 def detect_device() -> str:
@@ -759,4 +759,3 @@ def run_train_bpe(
         special_tokens=special_tokens, )
     
     return vocab, merges
-

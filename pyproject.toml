@@ -1,5 +1,5 @@
 [project]
-name = "cs336_basics"
+name = "llm_backbone"
 version = "1.0.3"
 description = "CS336 Assignment 1"
 readme = "README.md"
@@ -26,7 +26,7 @@ dependencies = [
 
 
 [tool.setuptools.packages.find]
-include = ["cs336_basics"]
+include = ["llm_backbone"]
 
 
 [tool.uv]

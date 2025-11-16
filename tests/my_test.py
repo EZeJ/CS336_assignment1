@@ -1,7 +1,7 @@
 import torch
 from torch import nn
-import cs336_basics.Transformers_cs336 as my_tf
-from cs336_basics.Transformers_cs336.modules.optimizer import SGD
+import llm_backbone.Transformers_cs336 as my_tf
+from llm_backbone.Transformers_cs336.modules.optimizer import SGD
 
 
 

@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from einops import rearrange, reduce, einsum, repeat
 from jaxtyping import Float
-import cs336_basics.Transformers_cs336 as my_tf
+import llm_backbone.Transformers_cs336 as my_tf
 
 """ Upper Class Parameters
     Given the weights of a Transformer language model and input indices,

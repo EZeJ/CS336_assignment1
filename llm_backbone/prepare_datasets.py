@@ -3,8 +3,8 @@ import json
 import argparse
 import numpy as np
 import yaml
-from cs336_basics.Tokenizers.BPE_tokenizer import BPETokenizer
-from cs336_basics.Tokenizers.BPE_tokenizer import Tokenizer
+from llm_backbone.Tokenizers.BPE_tokenizer import BPETokenizer
+from llm_backbone.Tokenizers.BPE_tokenizer import Tokenizer
 
 def load_config(path):
     with open(path, "r") as f:
@@ -25,7 +25,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train BPE and encode dataset")
     parser.add_argument(
         "--config",
-        default="./cs336_basics/configures/m4.yaml",
+        default="./llm_backbone/configures/m4.yaml",
         help="Path to YAML config file",
     )
     args = parser.parse_args()
@@ -75,14 +75,14 @@ if __name__ == "__main__":
 # import os
 # import yaml
 # import numpy as np
-# from cs336_basics.Tokenizers.BPE_tokenizer import BPETokenizer
+# from llm_backbone.Tokenizers.BPE_tokenizer import BPETokenizer
 
 # def load_config(path):
 #     with open(path, "r") as f:
 #         return yaml.safe_load(f)
 
 # def main():
-#     config = load_config("./cs336_basics/configures/m4.yaml")
+#     config = load_config("./llm_backbone/configures/m4.yaml")
 #     dataset_config = config["dataset"]
 
 #     input_path = dataset_config["input_path"]
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 #     vocab_size = config["model"]["vocab_size"]
 #     special_tokens = dataset_config.get("special_tokens", [])
 
-#     os.makedirs("./cs336_basics/dataset", exist_ok=True)
+#     os.makedirs("./llm_backbone/dataset", exist_ok=True)
 
 #     # Step 1: Train tokenizer
 #     tokenizer = BPETokenizer()

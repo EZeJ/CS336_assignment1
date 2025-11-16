@@ -1,4 +1,4 @@
-# This is a simple implementation of a linear layer in PyTorch undert cs336_basics instructions
+# This is a simple implementation of a linear layer in PyTorch under llm_backbone instructions
 
 import torch
 from torch import Tensor
@@ -32,7 +32,7 @@ class Linear(torch.nn.Module):
             :math:`k = \frac{1}{\text{in\_features}}`
       
     Examples::
-        >>> import cs336_basics.Transformers_cs336 as tf
+        >>> import llm_backbone.Transformers_cs336 as tf
         >>> m = tf.moudles.Linear(20, 30)
         >>> input = torch.randn(128, 20)
         >>> output = m(input)

@@ -3,7 +3,7 @@ import json
 import argparse
 import yaml
 import numpy as np
-from cs336_basics.Tokenizers.BPE_tokenizer import Tokenizer
+from llm_backbone.Tokenizers.BPE_tokenizer import Tokenizer
 
 def load_config(path):
     with open(path, "r") as f:
@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description="Encode dataset with existing vocab/merges")
     parser.add_argument(
         "--config",
-        default="./cs336_basics/configures/m4.yaml",
+        default="./llm_backbone/configures/m4.yaml",
         help="Path to YAML config file",
     )
     args = parser.parse_args()

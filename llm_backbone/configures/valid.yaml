@@ -20,16 +20,16 @@ training:
   max_iters: 1000
   log_every: 5
   val_every: 10
-  checkpoint_path: "./cs336_basics/checkpoints/valid_smoke.pt"
+  checkpoint_path: "./llm_backbone/checkpoints/valid_smoke.pt"
   device: "auto"
-  tensorboard_logdir: "./cs336_basics/runs/valid"
+  tensorboard_logdir: "./llm_backbone/runs/valid"
   wandb: false
   wandb_project: "cs336_A1"
 
 dataset:
   input_path: "../data/TinyStoriesV2-GPT4-valid.txt"
-  train_path: "./cs336_basics/dataset/train_valid.bin"
-  val_path: "./cs336_basics/dataset/val_valid.bin"
-  vocab_out: "./cs336_basics/dataset/vocab_valid.json"
-  merges_out: "./cs336_basics/dataset/merges_valid.txt"
+  train_path: "./llm_backbone/dataset/train_valid.bin"
+  val_path: "./llm_backbone/dataset/val_valid.bin"
+  vocab_out: "./llm_backbone/dataset/vocab_valid.json"
+  merges_out: "./llm_backbone/dataset/merges_valid.txt"
   special_tokens: ["<|endoftext|>"]

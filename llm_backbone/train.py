@@ -6,7 +6,7 @@ import torch
 import numpy as np
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
-import cs336_basics.Transformers_cs336 as my_tf
+import llm_backbone.Transformers_cs336 as my_tf
 import wandb
 
 
@@ -26,7 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train transformer LM")
     parser.add_argument(
         "--config",
-        default="./cs336_basics/configures/m4.yaml",
+        default="./llm_backbone/configures/m4.yaml",
         help="Path to YAML config file",
     )
     args = parser.parse_args()

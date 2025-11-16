@@ -2,7 +2,7 @@ import torch
 from torch import nn, Tensor
 from einops import rearrange, einsum
 from jaxtyping import Float
-import cs336_basics.Transformers_cs336 as my_tf
+import llm_backbone.Transformers_cs336 as my_tf
 
 
 class MultiheadSelfAttention(nn.Module):

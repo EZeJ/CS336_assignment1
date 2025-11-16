@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 from jaxtyping import Float, Int
 from einops import repeat, reduce, einsum, rearrange
-from cs336_basics.Transformers_cs336 import transformer as my_tf
+from llm_backbone.Transformers_cs336 import transformer as my_tf
 
 
 """Given a tensor of inputs and targets, compute the average cross-entropy

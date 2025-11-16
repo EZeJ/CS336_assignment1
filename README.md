@@ -12,7 +12,7 @@
 ![alt text](images/pass_all_tests.png)
 ## Part 1: BPE Tokenizer
 ![alt text](images/part1_output.png)
-Code in `cs336_basics/BPE_tokenizer.py`
+Code in `llm_backbone/BPE_tokenizer.py`
 ### Trainig Time of TinyStores
 ![alt text](images/trainig_time_of_tinyStores.png)
 
@@ -115,4 +115,3 @@ gunzip owt_valid.txt.gz
 
 cd ..
 ```
-
