@@ -1,9 +1,10 @@
 import os
 import json
+import argparse
 import numpy as np
+import yaml
 from cs336_basics.Tokenizers.BPE_tokenizer import BPETokenizer
 from cs336_basics.Tokenizers.BPE_tokenizer import Tokenizer
-import yaml
 
 def load_config(path):
     with open(path, "r") as f:
@@ -21,7 +22,15 @@ def save_tokenizer(vocab, merges, vocab_out, merges_out):
             f.write(f"{a.decode('latin1')} {b.decode('latin1')}\n")
 
 def main():
-    config = load_config("./cs336_basics/configures/m4.yaml")
+    parser = argparse.ArgumentParser(description="Train BPE and encode dataset")
+    parser.add_argument(
+        "--config",
+        default="./cs336_basics/configures/m4.yaml",
+        help="Path to YAML config file",
+    )
+    args = parser.parse_args()
+
+    config = load_config(args.config)
     dataset_cfg = config["dataset"]
 
     input_path = dataset_cfg["input_path"]

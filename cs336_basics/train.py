@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 import yaml
 import torch
 import numpy as np
@@ -21,6 +22,13 @@ def load_config(path):
         return yaml.safe_load(f)
 
 def main():
+    parser = argparse.ArgumentParser(description="Train transformer LM")
+    parser.add_argument(
+        "--config",
+        default="./cs336_basics/configures/m4.yaml",
+        help="Path to YAML config file",
+    )
+    args = parser.parse_args()
 
     # if we need to debug, we can wait for the debugger to attach
     # my_tf.modules.wait_for_debugger(port=5678, host="localhost")
@@ -28,7 +36,7 @@ def main():
 
 
     # Load config
-    config = load_config("./cs336_basics/configures/m4.yaml")
+    config = load_config(args.config)
 
     wandb_flag = config["training"]['wandb']
 
@@ -42,6 +50,10 @@ def main():
 
     # max_l2_norm
     max_l2_norm = config["optimizer"]["max_l2_norm"]
+    # ensure checkpoint directory exists
+    ckpt_dir = os.path.dirname(config["training"]["checkpoint_path"])
+    if ckpt_dir:
+        os.makedirs(ckpt_dir, exist_ok=True)
     
     # Create model
     model = my_tf.transformer.Transformer(

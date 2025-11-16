@@ -1,16 +1,25 @@
 import os
+import json
+import argparse
 import yaml
 import numpy as np
 from cs336_basics.Tokenizers.BPE_tokenizer import Tokenizer
-import json
 
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
 def main():
+    parser = argparse.ArgumentParser(description="Encode dataset with existing vocab/merges")
+    parser.add_argument(
+        "--config",
+        default="./cs336_basics/configures/m4.yaml",
+        help="Path to YAML config file",
+    )
+    args = parser.parse_args()
+
     # Load config
-    config_path = "./cs336_basics/configures/m4.yaml"
+    config_path = args.config
     config = load_config(config_path)
     dataset_cfg = config["dataset"]
 
