@@ -1,0 +1,35 @@
+model:
+  d_model: 512
+  num_heads: 16
+  d_ff: 1344
+  num_layers: 4
+  vocab_size: 10000
+  context_length: 256
+  rope_theta: 10000.0
+
+optimizer:
+  learning_rate_max: 2e-4
+  learning_rate_min: 1e-5
+  warmup_iters: 5000
+  cosine_iters: 50000
+  weight_decay: 0.001
+  max_l2_norm: 0.2
+
+training:
+  batch_size: 64
+  max_iters: 50000
+  log_every: 500
+  val_every: 500
+  checkpoint_path: "./cs336_basics/checkpoints/train_full.pt"
+  device: "auto"
+  tensorboard_logdir: "./cs336_basics/runs/train_full"
+  wandb: false
+  wandb_project: "cs336_A1"
+
+dataset:
+  input_path: "../data/TinyStoriesV2-GPT4-train.txt"
+  train_path: "./cs336_basics/dataset/train_full.bin"
+  val_path: "./cs336_basics/dataset/val_full.bin"
+  vocab_out: "./cs336_basics/dataset/vocab_full.json"
+  merges_out: "./cs336_basics/dataset/merges_full.txt"
+  special_tokens: ["<|endoftext|>"]
