@@ -17,7 +17,7 @@ optimizer:
 
 training:
   batch_size: 8
-  max_iters: 20
+  max_iters: 1000
   log_every: 5
   val_every: 10
   checkpoint_path: "./cs336_basics/checkpoints/valid_smoke.pt"
