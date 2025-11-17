@@ -15,12 +15,15 @@ from GP.utils import load_yaml_config, make_run_dir, save_checkpoint
 from GP.datasets import Dataset
 from GP.gp import GPSearch
 from GP.expr import Expr
+from GP.aggregate_GP import TARGET_FUNCS
 
 
 def build_dataset_from_signal(npz: dict, sig: str) -> Dataset:
     x = np.array(npz[sig]).astype(np.float32)
-    # targets: identity; caller should precompute target from x if needed
-    return Dataset(inputs=x[:, None], targets=x, feature_names=["x"])
+    # Choose a target function if known; otherwise identity
+    fn = TARGET_FUNCS.get(sig, lambda z: z)
+    y = fn(x).astype(np.float32)
+    return Dataset(inputs=x[:, None], targets=y, feature_names=["x"])
 
 
 def main():
