@@ -1,0 +1,17 @@
+const_range: 3.0
+crossover_rate: 0.5
+elite_fraction: 0.1
+fitness_weights:
+  degree: 0.0
+  depth: 0.0
+  max_rel: 0.7
+  mean_rel: 1.0
+  multiplies: 0.0
+generations: 1000
+max_depth: 100
+max_terms: 200
+mutation_rate: 0.3
+population_size: 64
+seed: 42
+target_key: silu_in
+tournament_size: 4
