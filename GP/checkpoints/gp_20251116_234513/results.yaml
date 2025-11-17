@@ -1,0 +1,33 @@
+config:
+  const_range: 3.0
+  crossover_rate: 0.5
+  elite_fraction: 0.1
+  fitness_weights:
+    degree: 0.0
+    depth: 0.0
+    max_rel: 0.7
+    mean_rel: 1.0
+    multiplies: 0.0
+  generations: 50
+  max_depth: 6
+  max_terms: 64
+  mutation_rate: 0.3
+  population_size: 64
+  seed: 42
+  target_key: silu_in
+  tournament_size: 4
+npz: GP/datasets/raw/20251116_210338/activations_all.npz
+signals:
+- expression: (((-2.444 + ((0.2047 * x) * ((-2.444 + -0.7336) * (((-0.4238 + -0.8364)
+    * ((0.5279 + -0.7336) * (-0.4238 + -0.8364))) * (-0.4238 + -0.8364))))) * ((0.5279
+    + -0.7336) * (-0.4238 + -0.8364))) * ((0.2047 * x) * ((-0.4238 + -0.8364) * ((-2.444
+    + (x * -0.6037)) * (-0.4238 + -0.8364)))))
+  metrics:
+    degree: 3
+    depth: 10
+    loss: 0.7219502747058868
+    max_rel: 0.921126663684845
+    mean_rel: 0.07716161012649536
+    multiplies: 14
+    term_count: 51
+  signal: combined_silu_in

@@ -1,0 +1,9 @@
+expression: x
+metrics:
+  degree: 1
+  depth: 1
+  loss: 0.15000000000000002
+  max_rel: 0.0
+  mean_rel: 0.0
+  multiplies: 0
+signal: layer0_gate_v

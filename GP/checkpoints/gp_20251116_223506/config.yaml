@@ -1,0 +1,16 @@
+const_range: 3.0
+crossover_rate: 0.4
+elite_fraction: 0.05
+fitness_weights:
+  degree: 0.1
+  depth: 0.05
+  max_rel: 0.5
+  mean_rel: 1.0
+  multiplies: 0.05
+generations: 300
+max_depth: 6
+max_terms: 32
+mutation_rate: 0.3
+population_size: 128
+seed: 42
+tournament_size: 5

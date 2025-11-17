@@ -154,7 +154,7 @@ def main():
                     wandb.log({"val/loss": val_loss.item(), "epoch": epoch})
                 if writer:
                     writer.add_scalar("val/loss", val_loss.item(), epoch)
-                print(f"[Validation] Epoch {epoch}: val_loss = {val_loss.item():.4f}")
+                # print(f"[Validation] Epoch {epoch}: val_loss = {val_loss.item():.4f}")
             model.train()
 
         # Save checkpoint

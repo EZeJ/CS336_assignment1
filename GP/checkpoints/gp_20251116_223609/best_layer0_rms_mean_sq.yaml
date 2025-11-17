@@ -1,0 +1,9 @@
+expression: '0.8644'
+metrics:
+  degree: 0
+  depth: 1
+  loss: 0.4618370562791824
+  max_rel: 0.5610712766647339
+  mean_rel: 0.1313014179468155
+  multiplies: 0
+signal: layer0_rms_mean_sq
