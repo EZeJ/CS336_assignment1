@@ -17,15 +17,7 @@ torch.set_float32_matmul_precision("medium")
 
 def detect_device() -> str:
     if torch.cuda.is_available():
-        # pick the CUDA device with the most free memory to avoid busy GPUs
-        best = None
-        max_free = -1
-        for idx in range(torch.cuda.device_count()):
-            free, _ = torch.cuda.mem_get_info(idx)
-            if free > max_free:
-                max_free = free
-                best = idx
-        return f"cuda:{best}" if best is not None else "cuda"
+        return "cuda"
     if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
         return "mps"
     return "cpu"
@@ -54,6 +46,7 @@ def main():
     wandb_flag = config["training"]['wandb']
     tb_logdir = config["training"].get("tensorboard_logdir")
     writer = SummaryWriter(tb_logdir) if tb_logdir else None
+    use_data_parallel = config["training"].get("data_parallel", False)
 
     if wandb_flag:
         wandb.init(project=config["training"]['wandb_project'], config=config)
@@ -82,6 +75,8 @@ def main():
         theta=config["model"]["rope_theta"],
         device=device
     ).to(device)
+    if use_data_parallel and torch.cuda.is_available() and torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
     model.train()
 
     # Create optimizer

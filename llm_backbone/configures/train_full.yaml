@@ -10,8 +10,8 @@ model:
 optimizer:
   learning_rate_max: 2e-4
   learning_rate_min: 1e-5
-  warmup_iters: 5000
-  cosine_iters: 50000
+  warmup_iters: 20
+  cosine_iters: 500
   weight_decay: 0.001
   max_l2_norm: 0.2
 
@@ -22,6 +22,7 @@ training:
   val_every: 500
   checkpoint_path: "./llm_backbone/checkpoints/train_full.pt"
   device: "auto"
+  data_parallel: true
   tensorboard_logdir: "./llm_backbone/runs/train_full"
   wandb: false
   wandb_project: "cs336_A1"
