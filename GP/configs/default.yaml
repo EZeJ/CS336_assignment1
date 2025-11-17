@@ -1,0 +1,19 @@
+seed: 42
+population_size: 128
+generations: 300
+max_depth: 6
+max_terms: 32
+tournament_size: 5
+mutation_rate: 0.3
+crossover_rate: 0.4
+elite_fraction: 0.05
+const_range: 3.0
+
+fitness_weights:
+  mean_rel: 1.0
+  max_rel: 0.5
+  degree: 0.1
+  multiplies: 0.05
+  depth: 0.05
+
+aggregate_interval: 25  # epochs; not used in GP search but retained for consistency

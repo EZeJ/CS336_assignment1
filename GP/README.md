@@ -17,8 +17,13 @@ Primary goal (from the proposal): evolve low-depth {+,\*}-only approximations th
 - `fitness.py`: compute composite loss (mean/max relative error + complexity penalties).
 - `gp.py`: simple tournament-selection GP loop with elites.
 - `search.py`: CLI runner.
+- `run_search.py`: YAML-driven search runner that loads an activations NPZ and saves checkpoints per signal.
+- `configs/default.yaml`: default hyperparameters.
+- `utils.py`: YAML config loader, run-dir creation, checkpoint writer.
 
 Example:
 ```bash
 uv run python -m GP.search --data ./GP/datasets/silu_grid.npz --gen 200 --pop 128 --out ./GP/results/silu_best.json
+
+uv run python -m GP.run_search --config ./GP/configs/default.yaml --npz ./GP/datasets/raw/20251116_210338/activations_all.npz
 ```
