@@ -18,10 +18,23 @@ from GP.expr import Expr
 from GP.aggregate_GP import TARGET_FUNCS
 
 
+def _resolve_target_func(sig: str):
+    """
+    Map signal names (possibly prefixed with layer info) to target functions.
+    Falls back to identity.
+    """
+    if sig in TARGET_FUNCS:
+        return TARGET_FUNCS[sig]
+
+    for base in TARGET_FUNCS:
+        if sig.endswith(base):
+            return TARGET_FUNCS[base]
+    return lambda z: z
+
+
 def build_dataset_from_signal(npz: dict, sig: str) -> Dataset:
     x = np.array(npz[sig]).astype(np.float32)
-    # Choose a target function if known; otherwise identity
-    fn = TARGET_FUNCS.get(sig, lambda z: z)
+    fn = _resolve_target_func(sig)
     y = fn(x).astype(np.float32)
     return Dataset(inputs=x[:, None], targets=y, feature_names=["x"])
 
