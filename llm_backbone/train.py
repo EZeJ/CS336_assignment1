@@ -12,9 +12,20 @@ import wandb
 
 
 
+torch.set_float32_matmul_precision("medium")
+
+
 def detect_device() -> str:
     if torch.cuda.is_available():
-        return "cuda"
+        # pick the CUDA device with the most free memory to avoid busy GPUs
+        best = None
+        max_free = -1
+        for idx in range(torch.cuda.device_count()):
+            free, _ = torch.cuda.mem_get_info(idx)
+            if free > max_free:
+                max_free = free
+                best = idx
+        return f"cuda:{best}" if best is not None else "cuda"
     if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
         return "mps"
     return "cpu"
