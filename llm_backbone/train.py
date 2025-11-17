@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import trange, tqdm
 import llm_backbone.Transformers_cs336 as my_tf
 import wandb
-
+import math
 
 
 torch.set_float32_matmul_precision("medium")
@@ -86,109 +86,87 @@ def main():
         weight_decay=float(config["optimizer"]["weight_decay"])
     )
 
-    # Adjust schedule bounds to the actual run length so LR changes even in short runs
-    max_iters = config["training"]["max_iters"]
-    warmup_iters = min(config["optimizer"]["warmup_iters"], max_iters)
-    cosine_iters = min(config["optimizer"]["cosine_iters"], max_iters)
+    # Treat max_iters as total number of epochs; single tqdm only
+    max_epochs = config["training"]["max_iters"]
+    warmup_iters = min(config["optimizer"]["warmup_iters"], max_epochs)
+    cosine_iters = min(config["optimizer"]["cosine_iters"], max_epochs)
     cosine_iters = max(cosine_iters, warmup_iters + 1)
 
-    # Progress bars: outer per epoch, inner per minibatch window
-    steps_per_epoch = config["training"].get("steps_per_epoch", 100)
-    steps_per_epoch = max(1, min(steps_per_epoch, max_iters))
-
-    global_step = 0
     last_val_loss = None
-    num_epochs = math.ceil(max_iters / steps_per_epoch)
-    epoch_bar = trange(num_epochs, desc="epoch", leave=True)
+    epoch_bar = trange(max_epochs, desc="epoch", leave=True)
 
     for epoch in epoch_bar:
-        remaining = max_iters - global_step
-        steps_this_epoch = min(steps_per_epoch, remaining)
-        block_bar = tqdm(total=steps_this_epoch, desc=f"epoch {epoch}", leave=False)
+        # Update LR per epoch
+        lr = my_tf.modules.get_lr_cosine_schedule(
+            epoch,
+            float(config["optimizer"]["learning_rate_max"]),
+            float(config["optimizer"]["learning_rate_min"]),
+            warmup_iters,
+            cosine_iters
+        )
+        for group in optimizer.param_groups:
+            group["lr"] = lr
 
-        for local_step in range(steps_this_epoch):
-            # Update LR
-            lr = my_tf.modules.get_lr_cosine_schedule(
-                global_step,
-                float(config["optimizer"]["learning_rate_max"]),
-                float(config["optimizer"]["learning_rate_min"]),
-                warmup_iters,
-                cosine_iters
-            )
-            for group in optimizer.param_groups:
-                group["lr"] = lr
+        # One batch per epoch (as requested)
+        x, y = my_tf.modules.get_batch(
+            dataset=train_data,
+            batch_size=config["training"]["batch_size"],
+            context_length=config["model"]["context_length"],
+            device=device
+        )
 
-            # Get batch
-            x, y = my_tf.modules.get_batch(
-                dataset=train_data,
-                batch_size=config["training"]["batch_size"],
-                context_length=config["model"]["context_length"],
-                device=device
-            )
+        # Forward
+        logits = model(x)
+        logits_flat = logits.view(-1, logits.size(-1))
+        targets_flat = y.reshape(-1)
+        loss = my_tf.modules.get_cross_entropy_loss(logits_flat, targets_flat)
 
-            # Forward
-            logits = model(x)
-            logits_flat = logits.view(-1, logits.size(-1))
-            targets_flat = y.reshape(-1)
-            loss = my_tf.modules.get_cross_entropy_loss(logits_flat, targets_flat)
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward() 
+        my_tf.modules.get_gradient_clipping(model.parameters(), max_l2_norm=max_l2_norm)
+        optimizer.step()
 
-            # Backpropagation
-            optimizer.zero_grad()
-            loss.backward() 
-            my_tf.modules.get_gradient_clipping(model.parameters(), max_l2_norm=max_l2_norm)
-            optimizer.step()
+        if wandb_flag:
+            wandb.log({"train/loss": loss.item(), "train/lr": lr, "epoch": epoch})
+        if writer:
+            writer.add_scalar("train/loss", loss.item(), epoch)
+            writer.add_scalar("train/lr", lr, epoch)
 
-            if wandb_flag:
-                wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": global_step})
-            if writer:
-                writer.add_scalar("train/loss", loss.item(), global_step)
-                writer.add_scalar("train/lr", lr, global_step)
-
-            # Logging per minibatch
-            block_bar.update(1)
-            block_bar.set_postfix(
-                loss=f"{loss.item():.4f}",
-                lr=f"{lr:.6f}",
-                vloss=f"{last_val_loss:.4f}" if last_val_loss is not None else "n/a",
-            )
-
-            # Validationls
-            if global_step % config["training"]["val_every"] == 0 and global_step > 0:
-                model.eval()
-                with torch.no_grad():
-                    x_val, y_val = my_tf.modules.get_batch(
-                        dataset=val_data,
-                        batch_size=config["training"]["batch_size"],
-                        context_length=config["model"]["context_length"],
-                        device=device
-                    )
-                    logits_val = model(x_val)
-                    val_loss = my_tf.modules.get_cross_entropy_loss(
-                        logits_val.view(-1, logits_val.size(-1)),
-                        y_val.reshape(-1)
-                    )
-                    last_val_loss = val_loss.item()
-                    
-                    if wandb_flag:
-                        wandb.log({"val/loss": val_loss.item(), "step": global_step})
-                    if writer:
-                        writer.add_scalar("val/loss", val_loss.item(), global_step)
-                    print(f"[Validation] Step {global_step}: val_loss = {val_loss.item():.4f}")
-                model.train()
-
-            # Save checkpoint
-            if global_step % config["training"]["val_every"] == 0:
-                my_tf.modules.save_checkpoint(
-                    model=model,
-                    optimizer=optimizer,
-                    iteration=global_step,
-                    out=config["training"]["checkpoint_path"]
+        # Validation
+        if (epoch + 1) % config["training"]["val_every"] == 0:
+            model.eval()
+            with torch.no_grad():
+                x_val, y_val = my_tf.modules.get_batch(
+                    dataset=val_data,
+                    batch_size=config["training"]["batch_size"],
+                    context_length=config["model"]["context_length"],
+                    device=device
                 )
-            global_step += 1
+                logits_val = model(x_val)
+                val_loss = my_tf.modules.get_cross_entropy_loss(
+                    logits_val.view(-1, logits_val.size(-1)),
+                    y_val.reshape(-1)
+                )
+                last_val_loss = val_loss.item()
+                
+                if wandb_flag:
+                    wandb.log({"val/loss": val_loss.item(), "epoch": epoch})
+                if writer:
+                    writer.add_scalar("val/loss", val_loss.item(), epoch)
+                print(f"[Validation] Epoch {epoch}: val_loss = {val_loss.item():.4f}")
+            model.train()
 
-        block_bar.close()
+        # Save checkpoint
+        if (epoch + 1) % config["training"]["val_every"] == 0:
+            my_tf.modules.save_checkpoint(
+                model=model,
+                optimizer=optimizer,
+                iteration=epoch,
+                out=config["training"]["checkpoint_path"]
+            )
+
         epoch_bar.set_postfix(
-            step=f"{global_step}/{max_iters}",
             loss=f"{loss.item():.4f}",
             vloss=f"{last_val_loss:.4f}" if last_val_loss is not None else "n/a",
             lr=f"{lr:.6f}",
