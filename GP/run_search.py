@@ -71,6 +71,7 @@ def main():
     parser.add_argument("--verbose", action="store_true", help="Print per-generation best during search.")
     parser.add_argument("--log-every", type=int, default=10, help="Generations between verbose logs.")
     parser.add_argument("--combine", action="store_true", help="Combine all signals matching target-key into one dataset.")
+    parser.add_argument("--jobs", type=int, default=1, help="Number of parallel worker processes for fitness eval.")
     args = parser.parse_args()
 
     cfg = load_yaml_config(args.config)
@@ -95,7 +96,7 @@ def main():
     results = []
     if target_key and args.combine:
         ds = build_combined_dataset(data, signals, target_key)
-        search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every)
+        search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every, n_jobs=args.jobs)
         best, _ = search.run()
         res = {
             "signal": f"combined_{target_key}",
@@ -108,7 +109,7 @@ def main():
     else:
         for sig in signals:
             ds = build_dataset_from_signal(data, sig)
-            search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every)
+            search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every, n_jobs=args.jobs)
             best, _ = search.run()
             res = {
                 "signal": sig,
