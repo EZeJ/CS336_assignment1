@@ -29,6 +29,8 @@ def main():
     parser.add_argument("--npz", required=True, help="Path to activations_all.npz.")
     parser.add_argument("--signals", nargs="*", default=None, help="Signals to fit; default = all non-epoch keys.")
     parser.add_argument("--out-dir", default="./GP/checkpoints", help="Base checkpoints directory.")
+    parser.add_argument("--verbose", action="store_true", help="Print per-generation best during search.")
+    parser.add_argument("--log-every", type=int, default=10, help="Generations between verbose logs.")
     args = parser.parse_args()
 
     cfg = load_yaml_config(args.config)
@@ -43,7 +45,7 @@ def main():
     results = []
     for sig in signals:
         ds = build_dataset_from_signal(data, sig)
-        search = GPSearch(cfg, ds)
+        search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every)
         best, _ = search.run()
         res = {
             "signal": sig,

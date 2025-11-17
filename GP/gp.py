@@ -23,10 +23,12 @@ class Individual:
 
 
 class GPSearch:
-    def __init__(self, cfg: GPConfig, dataset: Dataset):
+    def __init__(self, cfg: GPConfig, dataset: Dataset, verbose: bool = False, log_every: int = 10):
         self.cfg = cfg
         self.dataset = dataset
         self.rng = random.Random(cfg.seed)
+        self.verbose = verbose
+        self.log_every = log_every
         # Default names if none provided
         if not dataset.feature_names:
             dataset.feature_names = [f"x{i}" for i in range(dataset.inputs.shape[1])]
@@ -63,7 +65,7 @@ class GPSearch:
 
         elite_count = max(1, int(self.cfg.elite_fraction * self.cfg.population_size))
 
-        for _ in range(self.cfg.generations):
+        for gen in range(self.cfg.generations):
             # Keep elites
             elites = heapq.nsmallest(elite_count, pop)
 
@@ -101,5 +103,12 @@ class GPSearch:
             gen_best = min(pop, key=lambda ind: ind.metrics.loss)
             if gen_best.metrics.loss < best_overall.metrics.loss:
                 best_overall = gen_best
+
+            if self.verbose and ((gen + 1) % max(1, self.log_every) == 0 or gen == self.cfg.generations - 1):
+                print(
+                    f"[gen {gen+1}/{self.cfg.generations}] "
+                    f"best_loss={gen_best.metrics.loss:.6f} "
+                    f"expr={gen_best.expr}"
+                )
 
         return best_overall, pop

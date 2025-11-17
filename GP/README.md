@@ -25,5 +25,5 @@ Example:
 ```bash
 uv run python -m GP.search --data ./GP/datasets/silu_grid.npz --gen 200 --pop 128 --out ./GP/results/silu_best.json
 
-uv run python -m GP.run_search --config ./GP/configs/default.yaml --npz ./GP/datasets/raw/20251116_210338/activations_all.npz
+uv run python -m GP.run_search --config ./GP/configs/default.yaml --npz ./GP/datasets/raw/20251116_210338/activations_all.npz --verbose --log-every 20
 ```
