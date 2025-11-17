@@ -92,22 +92,17 @@ def main():
     cosine_iters = min(config["optimizer"]["cosine_iters"], max_iters)
     cosine_iters = max(cosine_iters, warmup_iters + 1)
 
-    steps_per_epoch = max(1, config["training"].get("steps_per_epoch", config["training"]["log_every"]))
-    num_epochs = math.ceil(max_iters / steps_per_epoch)
+    # Progress bars: outer over total steps, inner windowed bar for recent minibatches
     global_step = 0
     last_val_loss = None
+    progress = trange(max_iters, desc="train", leave=True)
+    block_bar = tqdm(total=config["training"]["log_every"], desc="block", leave=False)
 
-    # Progress bars: outer per epoch, inner per minibatch
-    epoch_bar = trange(num_epochs, desc="epoch", leave=True)
-    for epoch in epoch_bar:
-        block_bar = tqdm(total=steps_per_epoch, desc=f"epoch {epoch}", leave=False)
-        for local_step in range(steps_per_epoch):
-            if global_step >= max_iters:
-                break
+    for it in progress:
 
             # Update LR
             lr = my_tf.modules.get_lr_cosine_schedule(
-                global_step,
+                it,
                 float(config["optimizer"]["learning_rate_max"]),
                 float(config["optimizer"]["learning_rate_min"]),
                 warmup_iters,
@@ -137,10 +132,10 @@ def main():
             optimizer.step()
 
             if wandb_flag:
-                wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": global_step})
+                wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": it})
             if writer:
-                writer.add_scalar("train/loss", loss.item(), global_step)
-                writer.add_scalar("train/lr", lr, global_step)
+                writer.add_scalar("train/loss", loss.item(), it)
+                writer.add_scalar("train/lr", lr, it)
 
             # Logging per minibatch
             block_bar.update(1)
@@ -150,8 +145,11 @@ def main():
                 vloss=f"{last_val_loss:.4f}" if last_val_loss is not None else "n/a",
             )
 
+            if (it + 1) % config["training"]["log_every"] == 0:
+                block_bar.reset()
+
             # Validationls
-            if global_step % config["training"]["val_every"] == 0 and global_step > 0:
+            if it % config["training"]["val_every"] == 0 and it > 0:
                 model.eval()
                 with torch.no_grad():
                     x_val, y_val = my_tf.modules.get_batch(
@@ -168,26 +166,23 @@ def main():
                     last_val_loss = val_loss.item()
                     
                     if wandb_flag:
-                        wandb.log({"val/loss": val_loss.item(), "step": global_step})
+                        wandb.log({"val/loss": val_loss.item(), "step": it})
                     if writer:
-                        writer.add_scalar("val/loss", val_loss.item(), global_step)
-                    print(f"[Validation] Step {global_step}: val_loss = {val_loss.item():.4f}")
+                        writer.add_scalar("val/loss", val_loss.item(), it)
+                    print(f"[Validation] Step {it}: val_loss = {val_loss.item():.4f}")
                 model.train()
 
             # Save checkpoint
-            if global_step % config["training"]["val_every"] == 0:
+            if it % config["training"]["val_every"] == 0:
                 my_tf.modules.save_checkpoint(
                     model=model,
                     optimizer=optimizer,
-                    iteration=global_step,
+                    iteration=it,
                     out=config["training"]["checkpoint_path"]
                 )
-
             global_step += 1
 
-        block_bar.close()
-
-    epoch_bar.close()
+    block_bar.close()
 
     if writer:
         writer.flush()
