@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import os
 import argparse
+from datetime import datetime
+from pathlib import Path
 import yaml
 import numpy as np
 import torch
@@ -95,7 +97,9 @@ def build_model(config: dict, device: str, logger: ActivationLogger | None, epoc
 def main():
     parser = argparse.ArgumentParser(description="Train transformer with activation logging for GP.")
     parser.add_argument("--config", default="./llm_backbone/configures/valid.yaml", help="Path to YAML config file.")
-    parser.add_argument("--log-dir", default="./GP/datasets/raw", help="Output directory for NPZ logs.")
+    parser.add_argument("--log-dir", default="./GP/datasets/raw", help="Base output directory for NPZ logs.")
+    parser.add_argument("--run-id", default=None, help="Optional run identifier; defaults to timestamp.")
+    parser.add_argument("--aggregate-interval", type=int, default=10, help="Flush aggregated NPZ every N epochs.")
     parser.add_argument("--max-samples", type=int, default=10000, help="Max samples per logging call.")
     parser.add_argument("--seed", type=int, default=42, help="RNG seed for logging subsampling.")
     args = parser.parse_args()
@@ -107,9 +111,12 @@ def main():
     train_data = np.memmap(config["dataset"]["train_path"], dtype=np.uint16, mode="r")
     val_data = np.memmap(config["dataset"]["val_path"], dtype=np.uint16, mode="r")
 
-    # Logger
+    # Logger and run directory
     act_logger = ActivationLogger(max_samples_per_call=args.max_samples, rng_seed=args.seed)
     epoch_ref = [0]  # mutable holder for current epoch value
+    run_id = args.run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_dir = Path(args.log_dir) / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
 
     # Model
     model = build_model(config, device=device, logger=act_logger, epoch_ref=epoch_ref)
@@ -185,15 +192,19 @@ def main():
             model.train()
             # optional checkpoint could be added here if desired
 
+        # Aggregate flush every N epochs (overwrite)
+        if (epoch + 1) % max(1, args.aggregate_interval) == 0 or (epoch + 1) == max_epochs:
+            act_logger.flush_all_to_npz(run_dir / "activations_all.npz")
+
         # Postfix for progress
-        epoch_bar.set_postfix(loss=f"{loss.item():.4f}", lr=f"{lr:.6f}")
+        epoch_bar.set_postfix(loss=f"{loss.item():.4f}", lr=f"{lr:.6f}", run=str(run_dir))
 
     if writer:
         writer.flush()
         writer.close()
 
-    # Flush all logs into a single NPZ with epoch indices
-    act_logger.flush_all_to_npz(Path(args.log_dir) / "activations_all.npz")
+    # Final flush into single NPZ within run directory
+    act_logger.flush_all_to_npz(run_dir / "activations_all.npz")
 
 
 if __name__ == "__main__":
