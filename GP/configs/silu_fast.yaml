@@ -1,8 +1,8 @@
 seed: 42
 population_size: 64
 generations: 1000
-max_depth: 6
-max_terms: 64
+max_depth: 100
+max_terms: 200
 tournament_size: 4
 mutation_rate: 0.3
 crossover_rate: 0.5
