@@ -73,7 +73,7 @@ def build_model(config: dict, device: str, logger: ActivationLogger | None, epoc
             batch_size, seq_len = in_indices.shape
             pos_ids = torch.arange(0, seq_len, device=in_indices.device)
             for block in self.transformer_layers:
-                x = block(x, token_positions=pos_ids, epoch=epoch_ref[0])  # type: ignore[arg-type]
+                x = block(x, token_positions=pos_ids, epoch=epoch_ref[0])
             x = self.RMSNorm_ln_final(x)
             logits = self.lm_head(x)
             return logits

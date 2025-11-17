@@ -83,6 +83,8 @@ cs336_basics/checkpoints/
 llm_backbone/dataset/
 llm_backbone/checkpoints/
 llm_backbone/runs/
+GP/datasets/
+GP/results/
 
 # large artifacts
 *.bin

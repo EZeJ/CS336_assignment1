@@ -118,7 +118,8 @@ class TransformerBlock(torch.nn.Module):
 
     def forward(
             self, in_features: Float[Tensor, "batch seq_len d_model"], 
-            token_positions: Float[Tensor, "batch seq_len"]
+            token_positions: Float[Tensor, "batch seq_len"],
+            epoch: int | None = None
         ) -> Float[Tensor, "batch seq_len d_model"]:
         """
         Forward pass of the Transformer block.
