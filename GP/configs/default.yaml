@@ -17,3 +17,7 @@ fitness_weights:
   depth: 0.05
 
 aggregate_interval: 25  # epochs; not used in GP search but retained for consistency
+
+# Optional: if set, run_search will gather all signals ending with this key
+# e.g., target_key: "rms_mean_sq" to fit RMS across all layers
+target_key: null
