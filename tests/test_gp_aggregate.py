@@ -1,6 +1,10 @@
 from pathlib import Path
 import numpy as np
-import os
+import sys
+
+TEST_ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(TEST_ROOT))
+
 from GP.aggregate_GP import aggregate_raw_logs, silu_fn, rms_inv_sqrt_fn
 
 

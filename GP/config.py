@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -27,4 +27,4 @@ class GPConfig:
     const_range: float = 3.0
     seed: int = 42
 
-    fitness_weights: FitnessWeights = FitnessWeights()
+    fitness_weights: FitnessWeights = field(default_factory=FitnessWeights)
