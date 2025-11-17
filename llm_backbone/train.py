@@ -6,6 +6,7 @@ import torch
 import numpy as np
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import trange
 import llm_backbone.Transformers_cs336 as my_tf
 import wandb
 
@@ -80,7 +81,8 @@ def main():
     )
 
     # Training loop
-    for it in range(config["training"]["max_iters"]):
+    progress = trange(config["training"]["max_iters"], desc="train")
+    for it in progress:
         # Update LR
         lr = my_tf.modules.get_lr_cosine_schedule(
             it,
@@ -124,6 +126,7 @@ def main():
         # Logging
         if it % config["training"]["log_every"] == 0:
             print(f"Step {it}: loss = {loss.item():.4f}, lr = {lr:.6f}")
+            progress.set_postfix(loss=f"{loss.item():.4f}", lr=f"{lr:.6f}")
 
         # Validationls
         if it % config["training"]["val_every"] == 0 and it > 0:
