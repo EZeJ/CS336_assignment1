@@ -1,6 +1,6 @@
 seed: 42
 population_size: 128
-generations: 300
+generations: 3000
 max_depth: 6
 max_terms: 32
 tournament_size: 5
@@ -20,4 +20,5 @@ aggregate_interval: 25  # epochs; not used in GP search but retained for consist
 
 # Optional: if set, run_search will gather all signals ending with this key
 # e.g., target_key: "rms_mean_sq" to fit RMS across all layers
-target_key: null
+# silu_in
+target_key: silu_in

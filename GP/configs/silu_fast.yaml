@@ -1,6 +1,6 @@
 seed: 42
 population_size: 64
-generations: 50
+generations: 1000
 max_depth: 6
 max_terms: 64
 tournament_size: 4

@@ -112,12 +112,12 @@ def main():
         try:
             import weave
 
-            weave.init("easonj/680")
+            weave.init("680")
         except Exception:
             pass
 
         wandb_run = wandb.init(
-            project="easonj/680",
+            project="680",
             name=run_name,
             config={
                 "gp_config": str(gp_cfg_path),
