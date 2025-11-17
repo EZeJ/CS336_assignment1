@@ -185,14 +185,15 @@ def main():
             model.train()
             # optional checkpoint could be added here if desired
 
-        # Flush logs per epoch
-        out_path = act_logger.flush_epoch_to_npz(epoch, args.log_dir)
-        act_logger.clear_epoch(epoch)
-        epoch_bar.set_postfix(loss=f"{loss.item():.4f}", lr=f"{lr:.6f}", log=str(out_path))
+        # Postfix for progress
+        epoch_bar.set_postfix(loss=f"{loss.item():.4f}", lr=f"{lr:.6f}")
 
     if writer:
         writer.flush()
         writer.close()
+
+    # Flush all logs into a single NPZ with epoch indices
+    act_logger.flush_all_to_npz(Path(args.log_dir) / "activations_all.npz")
 
 
 if __name__ == "__main__":

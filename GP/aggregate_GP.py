@@ -52,7 +52,11 @@ def aggregate_raw_logs(raw_dir: str | Path, out_dir: str | Path, signals=None) -
     for npz_path in sorted(raw_dir.glob("**/*.npz")):
         data = np.load(npz_path)
         for sig in signals:
-            if sig in data and sig in TARGET_FUNCS:
+            # skip epoch companions
+            if f"{sig}_epoch" in data:
+                # allow future filtering by epochs if needed
+                collected[sig].append(data[sig])
+            elif sig in data and sig in TARGET_FUNCS:
                 collected[sig].append(data[sig])
 
     outputs: dict[str, Path] = {}

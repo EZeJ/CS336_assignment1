@@ -36,6 +36,34 @@ class ActivationLogger:
             arr = arr[idx]
         self._buffers[(epoch, signal)].append(arr)
 
+    def flush_all_to_npz(self, out_path: str | Path) -> Path:
+        """
+        Save all buffered data into a single NPZ.
+
+        For each signal, stores:
+            - <signal>: concatenated values
+            - <signal>_epoch: epoch indices aligned with values
+        """
+        by_signal: Dict[str, list[np.ndarray]] = defaultdict(list)
+        by_signal_epoch: Dict[str, list[np.ndarray]] = defaultdict(list)
+        for (ep, sig), chunks in self._buffers.items():
+            for chunk in chunks:
+                by_signal[sig].append(chunk)
+                ep_arr = np.full(chunk.shape, -1 if ep is None else ep, dtype=np.int32)
+                by_signal_epoch[sig].append(ep_arr)
+
+        data = {}
+        for sig, vals in by_signal.items():
+            data[sig] = np.concatenate(vals) if vals else np.empty((0,), dtype=np.float32)
+            data[f"{sig}_epoch"] = (
+                np.concatenate(by_signal_epoch[sig]) if by_signal_epoch[sig] else np.empty((0,), dtype=np.int32)
+            )
+
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(out_path, **data)
+        return out_path
+
     def get_epoch_buffers(self, epoch: int | None) -> dict[str, np.ndarray]:
         """Return concatenated arrays for all signals logged under the given epoch."""
         out = {}

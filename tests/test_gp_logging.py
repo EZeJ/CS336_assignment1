@@ -48,3 +48,13 @@ def test_rmsnorm_with_logging_records_mean_sq():
     buffers = logger.get_epoch_buffers(2)
     assert "rms_mean_sq" in buffers
     assert buffers["rms_mean_sq"].size == 6  # 2*3 tokens logged
+
+
+def test_flush_all_to_npz(tmp_path):
+    logger = ActivationLogger(max_samples_per_call=10, rng_seed=0)
+    logger.record("a", torch.tensor([1, 2, 3]), epoch=0)
+    logger.record("a", torch.tensor([4, 5]), epoch=1)
+    out_path = logger.flush_all_to_npz(tmp_path / "all.npz")
+    data = np.load(out_path)
+    np.testing.assert_array_equal(data["a"], np.array([1, 2, 3, 4, 5], dtype=np.float32))
+    np.testing.assert_array_equal(data["a_epoch"], np.array([0, 0, 0, 1, 1], dtype=np.int32))
