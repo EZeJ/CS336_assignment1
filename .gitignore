@@ -80,6 +80,13 @@ wandb/
 
 cs336_basics/dataset/
 cs336_basics/checkpoints/
+llm_backbone/dataset/
+llm_backbone/checkpoints/
+llm_backbone/runs/
+
+# large artifacts
+*.bin
+*.pt
 
 # Sphinx documentation
 docs/_build/
@@ -176,4 +183,3 @@ cython_debug/
 
 .ruff_cache/
 *.zip
-
