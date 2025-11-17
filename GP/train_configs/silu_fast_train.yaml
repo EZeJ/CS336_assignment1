@@ -1,0 +1,9 @@
+gp_config: ./GP/configs/silu_fast.yaml
+npz: ./GP/datasets/raw/20251116_210338/activations_all.npz
+combine: true
+jobs: 2
+verbose: true
+log_every: 5
+out_dir: ./GP/checkpoints
+target_key: silu_in
+
