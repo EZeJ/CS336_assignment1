@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import heapq
 import random
+import sys
 from typing import List, Tuple
 from .config import GPConfig
 from .expr import Expr, random_expr, mutate, crossover
@@ -63,8 +64,19 @@ class GPSearch:
         return best
 
     def run(self) -> Tuple[Individual, List[Individual]]:
+        if self.verbose:
+            print(f"Initializing population of size {self.cfg.population_size}...")
+            sys.stdout.flush()
+
         pop = [self._eval(ind) for ind in self._init_population()]
         best_overall = min(pop, key=lambda ind: ind.metrics.loss)
+
+        if self.verbose:
+            print(
+                f"[init] best_loss={best_overall.metrics.loss:.6f} "
+                f"expr={best_overall.expr}"
+            )
+            sys.stdout.flush()
 
         elite_count = max(1, int(self.cfg.elite_fraction * self.cfg.population_size))
 
@@ -113,5 +125,6 @@ class GPSearch:
                     f"best_loss={gen_best.metrics.loss:.6f} "
                     f"expr={gen_best.expr}"
                 )
+                sys.stdout.flush()
 
         return best_overall, pop
