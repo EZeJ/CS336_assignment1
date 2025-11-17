@@ -16,13 +16,13 @@ optimizer:
   max_l2_norm: 0.2
 
 training:
-  batch_size: 64
+  batch_size: 128              # leverage dual RTX A6000s
   max_iters: 50000
   log_every: 500
   val_every: 500
   checkpoint_path: "./llm_backbone/checkpoints/train_full.pt"
-  device: "auto"
-  data_parallel: true
+  device: "cuda"              # run on GPUs directly
+  data_parallel: true         # enable multi-GPU via DataParallel
   tensorboard_logdir: "./llm_backbone/runs/train_full"
   wandb: false
   wandb_project: "cs336_A1"
