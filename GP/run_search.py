@@ -76,8 +76,10 @@ def main():
     cfg = load_yaml_config(args.config)
     npz_path = Path(args.npz)
     data = np.load(npz_path)
-    if args.target_key:
-        signals = collect_signals(data, args.target_key)
+    # target key: CLI > config > None
+    target_key = args.target_key or cfg.target_key
+    if target_key:
+        signals = collect_signals(data, target_key)
     else:
         signals = args.signals or [k for k in data.files if not k.endswith("_epoch")]
 
@@ -91,18 +93,18 @@ def main():
     print("Signals:", signals)
 
     results = []
-    if args.target_key and args.combine:
-        ds = build_combined_dataset(data, signals, args.target_key)
+    if target_key and args.combine:
+        ds = build_combined_dataset(data, signals, target_key)
         search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every)
         best, _ = search.run()
         res = {
-            "signal": f"combined_{args.target_key}",
+            "signal": f"combined_{target_key}",
             "expression": str(best.expr),
             "metrics": asdict(best.metrics),
         }
         results.append(res)
-        save_checkpoint(run_dir, f"best_combined_{args.target_key}", res)
-        print(f"[combined {args.target_key}] best expr: {res['expression']}, metrics: {res['metrics']}")
+        save_checkpoint(run_dir, f"best_combined_{target_key}", res)
+        print(f"[combined {target_key}] best expr: {res['expression']}, metrics: {res['metrics']}")
     else:
         for sig in signals:
             ds = build_dataset_from_signal(data, sig)

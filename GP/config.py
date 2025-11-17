@@ -26,5 +26,6 @@ class GPConfig:
     max_terms: int = 32
     const_range: float = 3.0
     seed: int = 42
+    target_key: str | None = None
 
     fitness_weights: FitnessWeights = field(default_factory=FitnessWeights)

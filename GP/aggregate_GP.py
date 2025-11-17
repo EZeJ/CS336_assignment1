@@ -21,7 +21,8 @@ import numpy as np
 from typing import Callable, Dict
 
 
-EPS = 1e-6
+# Match RMSNorm default eps=1e-5 for consistency
+EPS = 1e-5
 
 
 def silu_fn(x: np.ndarray) -> np.ndarray:

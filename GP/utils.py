@@ -24,6 +24,7 @@ def load_yaml_config(path: str | Path) -> GPConfig:
         max_terms=cfg.get("max_terms", 32),
         const_range=cfg.get("const_range", 3.0),
         seed=cfg.get("seed", 42),
+        target_key=cfg.get("target_key"),
         fitness_weights=fitness_weights,
     )
 
