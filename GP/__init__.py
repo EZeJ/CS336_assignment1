@@ -10,6 +10,12 @@ Modules:
 - search: CLI entrypoint to run a GP search over provided datasets.
 """
 
+import numpy as _np
+
+# Silence numerical overflow/invalid warnings during GP evaluation; we treat
+# extreme values as high-loss individuals rather than crashing the run.
+_np.seterr(over="ignore", invalid="ignore", divide="ignore")
+
 from .config import GPConfig, FitnessWeights
 from .datasets import Dataset, load_dataset
 from .expr import Expr, random_expr
