@@ -1,0 +1,19 @@
+seed: 56
+population_size: 720
+generations: 2800
+max_depth: 18
+max_terms: 320
+tournament_size: 11
+mutation_rate: 0.1
+crossover_rate: 0.62
+elite_fraction: 0.2
+const_range: 8.5
+
+fitness_weights:
+  mean_rel: 1.0
+  max_rel: 1.0
+  degree: 0.0
+  multiplies: 0.0
+  depth: 0.0
+
+target_key: rms_mean_sq
