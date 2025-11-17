@@ -15,6 +15,7 @@ class Metrics:
     degree: int
     multiplies: int
     depth: int
+    term_count: int
 
 
 def _safe_rel_err(pred: np.ndarray, target: np.ndarray, eps: float = 1e-6) -> np.ndarray:
@@ -26,6 +27,8 @@ def compute_metrics(
     expr: Expr,
     dataset: Dataset,
     weights: FitnessWeights,
+    max_terms: int | None = None,
+    term_penalty: float = 1e3,
     eps: float = 1e-6,
 ) -> Metrics:
     inputs = {name: dataset.inputs[:, i] for i, name in enumerate(dataset.feature_names or ["x"])}
@@ -39,6 +42,7 @@ def compute_metrics(
     degree = expr.degree()
     multiplies = expr.multiplies()
     depth = expr.depth()
+    term_count = expr.term_count()
 
     loss = (
         weights.mean_rel * mean_rel
@@ -47,6 +51,8 @@ def compute_metrics(
         + weights.multiplies * multiplies
         + weights.depth * depth
     )
+    if max_terms is not None and term_count > max_terms:
+        loss += term_penalty * (term_count - max_terms)
     return Metrics(
         loss=loss,
         mean_rel=mean_rel,
@@ -54,4 +60,5 @@ def compute_metrics(
         degree=degree,
         multiplies=multiplies,
         depth=depth,
+        term_count=term_count,
     )

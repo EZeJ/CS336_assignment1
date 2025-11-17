@@ -47,6 +47,20 @@ def collect_signals(npz: dict, target_key: str) -> list[str]:
     return [k for k in npz.files if k.endswith(target_key)]
 
 
+def build_combined_dataset(npz: dict, sigs: list[str], name: str) -> Dataset:
+    xs = []
+    ys = []
+    for sig in sigs:
+        x = np.array(npz[sig]).astype(np.float32)
+        fn = _resolve_target_func(sig)
+        y = fn(x).astype(np.float32)
+        xs.append(x)
+        ys.append(y)
+    x_all = np.concatenate(xs).astype(np.float32)
+    y_all = np.concatenate(ys).astype(np.float32)
+    return Dataset(inputs=x_all[:, None], targets=y_all, feature_names=["x"])
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run GP search on activations NPZ.")
     parser.add_argument("--config", required=True, help="YAML config path.")
@@ -56,6 +70,7 @@ def main():
     parser.add_argument("--out-dir", default="./GP/checkpoints", help="Base checkpoints directory.")
     parser.add_argument("--verbose", action="store_true", help="Print per-generation best during search.")
     parser.add_argument("--log-every", type=int, default=10, help="Generations between verbose logs.")
+    parser.add_argument("--combine", action="store_true", help="Combine all signals matching target-key into one dataset.")
     args = parser.parse_args()
 
     cfg = load_yaml_config(args.config)
@@ -70,22 +85,40 @@ def main():
     # Save config snapshot
     save_checkpoint(run_dir, "config", asdict(cfg))
 
+    # Print config and signals upfront
+    print("=== GP config ===")
+    print(cfg)
+    print("Signals:", signals)
+
     results = []
-    for sig in signals:
-        ds = build_dataset_from_signal(data, sig)
+    if args.target_key and args.combine:
+        ds = build_combined_dataset(data, signals, args.target_key)
         search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every)
         best, _ = search.run()
         res = {
-            "signal": sig,
+            "signal": f"combined_{args.target_key}",
             "expression": str(best.expr),
             "metrics": asdict(best.metrics),
         }
         results.append(res)
-        save_checkpoint(run_dir, f"best_{sig}", res)
-        print(f"[{sig}] best expr: {res['expression']}, metrics: {res['metrics']}")
+        save_checkpoint(run_dir, f"best_combined_{args.target_key}", res)
+        print(f"[combined {args.target_key}] best expr: {res['expression']}, metrics: {res['metrics']}")
+    else:
+        for sig in signals:
+            ds = build_dataset_from_signal(data, sig)
+            search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every)
+            best, _ = search.run()
+            res = {
+                "signal": sig,
+                "expression": str(best.expr),
+                "metrics": asdict(best.metrics),
+            }
+            results.append(res)
+            save_checkpoint(run_dir, f"best_{sig}", res)
+            print(f"[{sig}] best expr: {res['expression']}, metrics: {res['metrics']}")
 
     # Save aggregate results
-    save_checkpoint(run_dir, "results", {"signals": results, "npz": str(npz_path)})
+    save_checkpoint(run_dir, "results", {"signals": results, "npz": str(npz_path), "config": asdict(cfg)})
 
 
 if __name__ == "__main__":

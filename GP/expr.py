@@ -45,6 +45,10 @@ class Expr:
             return 0
         return self.left.multiplies() + self.right.multiplies() + (1 if self.op == "mul" else 0)
 
+    def term_count(self) -> int:
+        """Count total nodes in the expression tree."""
+        return len(self.nodes())
+
     def depth(self) -> int:
         if self.op in ("const", "var"):
             return 1

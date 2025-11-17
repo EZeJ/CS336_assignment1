@@ -50,7 +50,10 @@ class GPSearch:
     def _eval(self, ind: Individual) -> Individual:
         if ind.metrics is None:
             ind.metrics = compute_metrics(
-                ind.expr, self.dataset, self.cfg.fitness_weights
+                ind.expr,
+                self.dataset,
+                self.cfg.fitness_weights,
+                max_terms=self.cfg.max_terms,
             )
         return ind
 
