@@ -92,17 +92,24 @@ def main():
     cosine_iters = min(config["optimizer"]["cosine_iters"], max_iters)
     cosine_iters = max(cosine_iters, warmup_iters + 1)
 
-    # Progress bars: outer over total steps, inner windowed bar for recent minibatches
+    # Progress bars: outer per epoch, inner per minibatch window
+    steps_per_epoch = config["training"].get("steps_per_epoch", 100)
+    steps_per_epoch = max(1, min(steps_per_epoch, max_iters))
+
     global_step = 0
     last_val_loss = None
-    progress = trange(max_iters, desc="train", leave=True)
-    block_bar = tqdm(total=config["training"]["log_every"], desc="block", leave=False)
+    num_epochs = math.ceil(max_iters / steps_per_epoch)
+    epoch_bar = trange(num_epochs, desc="epoch", leave=True)
 
-    for it in progress:
+    for epoch in epoch_bar:
+        remaining = max_iters - global_step
+        steps_this_epoch = min(steps_per_epoch, remaining)
+        block_bar = tqdm(total=steps_this_epoch, desc=f"epoch {epoch}", leave=False)
 
+        for local_step in range(steps_this_epoch):
             # Update LR
             lr = my_tf.modules.get_lr_cosine_schedule(
-                it,
+                global_step,
                 float(config["optimizer"]["learning_rate_max"]),
                 float(config["optimizer"]["learning_rate_min"]),
                 warmup_iters,
@@ -132,10 +139,10 @@ def main():
             optimizer.step()
 
             if wandb_flag:
-                wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": it})
+                wandb.log({"train/loss": loss.item(), "train/lr": lr, "step": global_step})
             if writer:
-                writer.add_scalar("train/loss", loss.item(), it)
-                writer.add_scalar("train/lr", lr, it)
+                writer.add_scalar("train/loss", loss.item(), global_step)
+                writer.add_scalar("train/lr", lr, global_step)
 
             # Logging per minibatch
             block_bar.update(1)
@@ -145,11 +152,8 @@ def main():
                 vloss=f"{last_val_loss:.4f}" if last_val_loss is not None else "n/a",
             )
 
-            if (it + 1) % config["training"]["log_every"] == 0:
-                block_bar.reset()
-
             # Validationls
-            if it % config["training"]["val_every"] == 0 and it > 0:
+            if global_step % config["training"]["val_every"] == 0 and global_step > 0:
                 model.eval()
                 with torch.no_grad():
                     x_val, y_val = my_tf.modules.get_batch(
@@ -166,23 +170,31 @@ def main():
                     last_val_loss = val_loss.item()
                     
                     if wandb_flag:
-                        wandb.log({"val/loss": val_loss.item(), "step": it})
+                        wandb.log({"val/loss": val_loss.item(), "step": global_step})
                     if writer:
-                        writer.add_scalar("val/loss", val_loss.item(), it)
-                    print(f"[Validation] Step {it}: val_loss = {val_loss.item():.4f}")
+                        writer.add_scalar("val/loss", val_loss.item(), global_step)
+                    print(f"[Validation] Step {global_step}: val_loss = {val_loss.item():.4f}")
                 model.train()
 
             # Save checkpoint
-            if it % config["training"]["val_every"] == 0:
+            if global_step % config["training"]["val_every"] == 0:
                 my_tf.modules.save_checkpoint(
                     model=model,
                     optimizer=optimizer,
-                    iteration=it,
+                    iteration=global_step,
                     out=config["training"]["checkpoint_path"]
                 )
             global_step += 1
 
-    block_bar.close()
+        block_bar.close()
+        epoch_bar.set_postfix(
+            step=f"{global_step}/{max_iters}",
+            loss=f"{loss.item():.4f}",
+            vloss=f"{last_val_loss:.4f}" if last_val_loss is not None else "n/a",
+            lr=f"{lr:.6f}",
+        )
+
+    epoch_bar.close()
 
     if writer:
         writer.flush()
