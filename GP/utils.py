@@ -29,6 +29,13 @@ def load_yaml_config(path: str | Path) -> GPConfig:
     )
 
 
+def load_run_yaml(path: str | Path) -> dict:
+    """Load a run-level config YAML (npz path, combine, jobs, etc.)."""
+    with open(path, "r") as f:
+        cfg = yaml.safe_load(f)
+    return cfg or {}
+
+
 def make_run_dir(base: str | Path, prefix: str = "run") -> Path:
     """Create a date_time_id run directory under base."""
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")

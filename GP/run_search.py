@@ -11,7 +11,7 @@ import argparse
 from pathlib import Path
 import numpy as np
 from dataclasses import asdict
-from GP.utils import load_yaml_config, make_run_dir, save_checkpoint
+from GP.utils import load_yaml_config, load_run_yaml, make_run_dir, save_checkpoint
 from GP.datasets import Dataset
 from GP.gp import GPSearch
 from GP.expr import Expr
@@ -63,8 +63,9 @@ def build_combined_dataset(npz: dict, sigs: list[str], name: str) -> Dataset:
 
 def main():
     parser = argparse.ArgumentParser(description="Run GP search on activations NPZ.")
-    parser.add_argument("--config", required=True, help="YAML config path.")
-    parser.add_argument("--npz", required=True, help="Path to activations_all.npz.")
+    parser.add_argument("--config", help="YAML config path for GP hyperparameters.")
+    parser.add_argument("--train-config", help="YAML run-level config (npz, combine, jobs, etc.).")
+    parser.add_argument("--npz", help="Path to activations_all.npz.")
     parser.add_argument("--signals", nargs="*", default=None, help="Signals to fit; default = all non-epoch keys.")
     parser.add_argument("--target-key", default=None, help="If set, train on all signals ending with this key (e.g., rms_mean_sq).")
     parser.add_argument("--out-dir", default="./GP/checkpoints", help="Base checkpoints directory.")
@@ -74,17 +75,30 @@ def main():
     parser.add_argument("--jobs", type=int, default=1, help="Number of parallel worker processes for fitness eval.")
     args = parser.parse_args()
 
-    cfg = load_yaml_config(args.config)
-    npz_path = Path(args.npz)
+    run_cfg = load_run_yaml(args.train_config) if args.train_config else {}
+
+    # Determine GP config path: train-config gp_config overrides CLI --config
+    gp_cfg_path = run_cfg.get("gp_config", args.config)
+    if gp_cfg_path is None:
+        raise ValueError("Must provide either --config or train-config with gp_config field.")
+
+    cfg = load_yaml_config(gp_cfg_path)
+
+    # Determine NPZ path: train-config npz overrides CLI --npz
+    npz_path_str = run_cfg.get("npz", args.npz)
+    if npz_path_str is None:
+        raise ValueError("Must provide NPZ path via --npz or train-config npz field.")
+    npz_path = Path(npz_path_str)
     data = np.load(npz_path)
     # target key: CLI > config > None
-    target_key = args.target_key or cfg.target_key
+    target_key = args.target_key or run_cfg.get("target_key") or cfg.target_key
     if target_key:
         signals = collect_signals(data, target_key)
     else:
-        signals = args.signals or [k for k in data.files if not k.endswith("_epoch")]
+        signals = run_cfg.get("signals") or args.signals or [k for k in data.files if not k.endswith("_epoch")]
 
-    run_dir = make_run_dir(args.out_dir, prefix="gp")
+    out_dir = run_cfg.get("out_dir", args.out_dir)
+    run_dir = make_run_dir(out_dir, prefix="gp")
     # Save config snapshot
     save_checkpoint(run_dir, "config", asdict(cfg))
 
@@ -94,9 +108,14 @@ def main():
     print("Signals:", signals)
 
     results = []
-    if target_key and args.combine:
+    combine = run_cfg.get("combine", args.combine)
+    jobs = int(run_cfg.get("jobs", args.jobs))
+    verbose = bool(run_cfg.get("verbose", args.verbose))
+    log_every = int(run_cfg.get("log_every", args.log_every))
+
+    if target_key and combine:
         ds = build_combined_dataset(data, signals, target_key)
-        search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every, n_jobs=args.jobs)
+        search = GPSearch(cfg, ds, verbose=verbose, log_every=log_every, n_jobs=jobs)
         best, _ = search.run()
         res = {
             "signal": f"combined_{target_key}",
@@ -109,7 +128,7 @@ def main():
     else:
         for sig in signals:
             ds = build_dataset_from_signal(data, sig)
-            search = GPSearch(cfg, ds, verbose=args.verbose, log_every=args.log_every, n_jobs=args.jobs)
+            search = GPSearch(cfg, ds, verbose=verbose, log_every=log_every, n_jobs=jobs)
             best, _ = search.run()
             res = {
                 "signal": sig,
