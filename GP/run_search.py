@@ -102,6 +102,35 @@ def main():
     # Save config snapshot
     save_checkpoint(run_dir, "config", asdict(cfg))
 
+    # Setup logging with wandb/weave
+    wandb_run = None
+    run_name_base = Path(args.train_config or gp_cfg_path).stem
+    run_name = f"{run_name_base}_{run_dir.name}"
+    try:
+        import wandb
+
+        try:
+            import weave
+
+            weave.init("easonj/680")
+        except Exception:
+            pass
+
+        wandb_run = wandb.init(
+            project="easonj/680",
+            name=run_name,
+            config={
+                "gp_config": str(gp_cfg_path),
+                "npz": str(npz_path),
+                "target_key": target_key,
+                "combine": run_cfg.get("combine", args.combine),
+                "jobs": int(run_cfg.get("jobs", args.jobs)),
+            },
+        )
+    except Exception as e:
+        print(f"[warn] wandb/weave logging disabled: {e}")
+        wandb_run = None
+
     # Print config and signals upfront
     print("=== GP config ===")
     print(cfg)
@@ -113,9 +142,45 @@ def main():
     verbose = bool(run_cfg.get("verbose", args.verbose))
     log_every = int(run_cfg.get("log_every", args.log_every))
 
+    def make_logger():
+        if wandb_run is None:
+            return None
+
+        import wandb
+
+        def _log(gen, gen_best, best_overall):
+            m = gen_best.metrics
+            gm = best_overall.metrics
+            wandb.log(
+                {
+                    "gen": gen,
+                    "best/loss": m.loss,
+                    "best/mean_rel": m.mean_rel,
+                    "best/max_rel": m.max_rel,
+                    "best/degree": m.degree,
+                    "best/multiplies": m.multiplies,
+                    "best/depth": m.depth,
+                    "best/term_count": m.term_count,
+                    "best/expr": str(gen_best.expr),
+                    "global/best_loss": gm.loss,
+                    "global/mean_rel": gm.mean_rel,
+                    "global/max_rel": gm.max_rel,
+                    "global/degree": gm.degree,
+                    "global/multiplies": gm.multiplies,
+                    "global/depth": gm.depth,
+                    "global/term_count": gm.term_count,
+                    "global/expr": str(best_overall.expr),
+                },
+                step=gen,
+            )
+
+        return _log
+
+    logger = make_logger()
+
     if target_key and combine:
         ds = build_combined_dataset(data, signals, target_key)
-        search = GPSearch(cfg, ds, verbose=verbose, log_every=log_every, n_jobs=jobs)
+        search = GPSearch(cfg, ds, verbose=verbose, log_every=log_every, n_jobs=jobs, logger=logger)
         best, _ = search.run()
         res = {
             "signal": f"combined_{target_key}",
@@ -128,7 +193,7 @@ def main():
     else:
         for sig in signals:
             ds = build_dataset_from_signal(data, sig)
-            search = GPSearch(cfg, ds, verbose=verbose, log_every=log_every, n_jobs=jobs)
+            search = GPSearch(cfg, ds, verbose=verbose, log_every=log_every, n_jobs=jobs, logger=logger)
             best, _ = search.run()
             res = {
                 "signal": sig,
@@ -141,6 +206,9 @@ def main():
 
     # Save aggregate results
     save_checkpoint(run_dir, "results", {"signals": results, "npz": str(npz_path), "config": asdict(cfg)})
+
+    if wandb_run is not None:
+        wandb_run.finish()
 
 
 if __name__ == "__main__":

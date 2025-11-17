@@ -47,13 +47,22 @@ class Individual:
 
 
 class GPSearch:
-    def __init__(self, cfg: GPConfig, dataset: Dataset, verbose: bool = False, log_every: int = 10, n_jobs: int = 1):
+    def __init__(
+        self,
+        cfg: GPConfig,
+        dataset: Dataset,
+        verbose: bool = False,
+        log_every: int = 10,
+        n_jobs: int = 1,
+        logger=None,
+    ):
         self.cfg = cfg
         self.dataset = dataset
         self.rng = random.Random(cfg.seed)
         self.verbose = verbose
         self.log_every = log_every
         self.n_jobs = max(1, n_jobs)
+        self.logger = logger
         # Default names if none provided
         if not dataset.feature_names:
             dataset.feature_names = [f"x{i}" for i in range(dataset.inputs.shape[1])]
@@ -152,6 +161,9 @@ class GPSearch:
                 if gen_best.metrics.loss < best_overall.metrics.loss:
                     best_overall = gen_best
 
+                if self.logger is not None:
+                    self.logger(gen, gen_best, best_overall)
+
                 if self.verbose and ((gen + 1) % max(1, self.log_every) == 0 or gen == self.cfg.generations - 1):
                     print(
                         f"[gen {gen+1}/{self.cfg.generations}] "
@@ -214,6 +226,9 @@ class GPSearch:
                     gen_best = min(pop, key=lambda ind: ind.metrics.loss)
                     if gen_best.metrics.loss < best_overall.metrics.loss:
                         best_overall = gen_best
+
+                    if self.logger is not None:
+                        self.logger(gen, gen_best, best_overall)
 
                     if self.verbose and ((gen + 1) % max(1, self.log_every) == 0 or gen == self.cfg.generations - 1):
                         print(
