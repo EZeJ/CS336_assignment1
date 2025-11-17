@@ -6,7 +6,7 @@ import torch
 import numpy as np
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
-from tqdm import trange
+from tqdm import trange, tqdm
 import llm_backbone.Transformers_cs336 as my_tf
 import wandb
 
@@ -86,16 +86,25 @@ def main():
         weight_decay=float(config["optimizer"]["weight_decay"])
     )
 
+    # Adjust schedule bounds to the actual run length so LR changes even in short runs
+    max_iters = config["training"]["max_iters"]
+    warmup_iters = min(config["optimizer"]["warmup_iters"], max_iters)
+    cosine_iters = min(config["optimizer"]["cosine_iters"], max_iters)
+    cosine_iters = max(cosine_iters, warmup_iters + 1)
+
+    # Progress bars: overall and per-log block
+    progress = trange(max_iters, desc="train", leave=True)
+    block_bar = tqdm(total=config["training"]["log_every"], desc="block", leave=False)
+
     # Training loop
-    progress = trange(config["training"]["max_iters"], desc="train")
     for it in progress:
         # Update LR
         lr = my_tf.modules.get_lr_cosine_schedule(
             it,
             float(config["optimizer"]["learning_rate_max"]),
             float(config["optimizer"]["learning_rate_min"]),
-            config["optimizer"]["warmup_iters"],
-            config["optimizer"]["cosine_iters"]
+            warmup_iters,
+            cosine_iters
         )
         
         for group in optimizer.param_groups:
@@ -130,9 +139,11 @@ def main():
             writer.add_scalar("train/lr", lr, it)
 
         # Logging
+        block_bar.update(1)
         if it % config["training"]["log_every"] == 0:
             print(f"Step {it}: loss = {loss.item():.4f}, lr = {lr:.6f}")
             progress.set_postfix(loss=f"{loss.item():.4f}", lr=f"{lr:.6f}")
+            block_bar.reset()
 
         # Validationls
         if it % config["training"]["val_every"] == 0 and it > 0:
