@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+import warnings; warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
+
 
 def expr_torch(x):
     # Accept Python floats / lists as well

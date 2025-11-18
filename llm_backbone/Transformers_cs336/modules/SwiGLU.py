@@ -165,7 +165,7 @@
 
 
 
-#### Original SwiGLU implementation for reference ####
+#### Original SwiGLU implementation (adapted to use Chebyshev SiLU) ####
 
 
 import torch
@@ -176,8 +176,48 @@ from torch import nn
 from torch.nn import functional as F, init
 from .linear import Linear
 
+
 def silu(x: Tensor) -> Tensor:
-        return x * torch.sigmoid(x)
+    """Reference SiLU; kept for compatibility."""
+    return x * torch.sigmoid(x)
+
+
+# Chebyshev-based polynomial approximation to SiLU on [-6, 6],
+# converted to power-series coefficients via numpy.polynomial.
+_CHEB_SILU_COEFFS = torch.tensor(
+    [
+        1.58679809e-02,
+        5.00000000e-01,
+        2.19307009e-01,
+        -1.06282049e-15,
+        -9.91605229e-03,
+        8.46262408e-17,
+        2.77574206e-04,
+        -2.73674466e-18,
+        -3.00910333e-06,
+        3.09898453e-20,
+    ],
+    dtype=torch.float32,
+)
+
+
+def cheb_silu(x: Tensor) -> Tensor:
+    """
+    Chebyshev polynomial approximation to SiLU(x) = x * sigmoid(x).
+
+    Approximation is accurate over x in [-6, 6]. Inputs are clamped
+    to this range and evaluated via Horner's rule.
+    """
+    if not torch.is_tensor(x):
+        x = torch.tensor(x, dtype=torch.float32)
+
+    x_clamped = torch.clamp(x, -6.0, 6.0)
+    coeffs = _CHEB_SILU_COEFFS.to(device=x_clamped.device, dtype=x_clamped.dtype)
+
+    y = torch.zeros_like(x_clamped)
+    for c in reversed(coeffs):
+        y = y * x_clamped + c
+    return y
 
 class SwiGLU(nn.Module):
     r"""
@@ -273,7 +313,8 @@ class SwiGLU(nn.Module):
         """
         wx1 = self.w1(x)
         wx3 = self.w3(x)
-        silu_wx1 = silu(wx1)
+        # Replace true SiLU with Chebyshev polynomial surrogate.
+        silu_wx1 = cheb_silu(wx1)
         swiglu = self.w2(silu_wx1 * wx3)
         # print(f"SwiGLU original forward pass output shape: {swiglu.shape}")
         return swiglu

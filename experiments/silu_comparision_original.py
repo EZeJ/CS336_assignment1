@@ -1,5 +1,4 @@
 import torch
-
 def expr_torch(x):
     # Accept Python floats / lists as well
     if not torch.is_tensor(x):
