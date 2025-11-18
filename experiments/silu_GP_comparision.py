@@ -103,21 +103,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32
 
 # -----------------------------
-# Utility: timing + error metrics
+# Utility: error metrics
 # -----------------------------
-def rmse_and_se(a: torch.Tensor, b: torch.Tensor):
-    """
-    Returns:
-      rmse: scalar
-      se:   sum of squared errors (scalar)
-    """
-    diff = a - b
-    mse = torch.mean(diff ** 2)
-    rmse = torch.sqrt(mse)
-    se = torch.sum(diff ** 2)
-    return rmse.item(), se.item()
-
-
 def mean_max_rel(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-6):
     """
     Mean/max relative error, matching GP's _safe_rel_err definition.
@@ -130,6 +117,24 @@ def mean_max_rel(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-6):
     mean_rel = torch.mean(rel)
     max_rel = torch.max(rel)
     return mean_rel.item(), max_rel.item()
+
+
+def cross_entropy_loss(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-6) -> float:
+    """
+    Proxy cross-entropy loss between two scalar activations.
+
+    We interpret each scalar as a Bernoulli logit via sigmoid:
+      p_target = sigmoid(target), p_pred = sigmoid(pred)
+    and compute the cross-entropy H(p_target, p_pred) averaged over all samples:
+      -[p_target * log(p_pred) + (1 - p_target) * log(1 - p_pred)].
+    """
+    p_target = torch.sigmoid(target)
+    p_pred = torch.sigmoid(pred)
+    ce = -(
+        p_target * torch.log(p_pred + eps)
+        + (1.0 - p_target) * torch.log(1.0 - p_pred + eps)
+    )
+    return ce.mean().item()
 
 
 # -----------------------------
@@ -184,12 +189,11 @@ if device.type == "cuda":
 t1 = time.perf_counter()
 cheb_time_full = t1 - t0
 
-rmse_poly_full, se_poly_full = rmse_and_se(y_silu_full, y_poly_full)
-rmse_cheb_full, se_cheb_full = rmse_and_se(y_silu_full, y_cheb_full)
-rmse_poly_vs_cheb_full, se_poly_vs_cheb_full = rmse_and_se(y_poly_full, y_cheb_full)
-
 mean_rel_poly_full, max_rel_poly_full = mean_max_rel(y_poly_full, y_silu_full)
 mean_rel_cheb_full, max_rel_cheb_full = mean_max_rel(y_cheb_full, y_silu_full)
+
+ce_poly_full = cross_entropy_loss(y_poly_full, y_silu_full)
+ce_cheb_full = cross_entropy_loss(y_cheb_full, y_silu_full)
 
 # GP-style error-only loss (ignoring degree/multiplies/depth terms)
 MEAN_REL_WEIGHT = 1.0
@@ -201,13 +205,14 @@ print("\n=== Single-run summary on full dataset ===")
 print(f"  SiLU time      : {silu_time_full:.4f} s")
 print(f"  GP poly time   : {poly_time_full:.4f} s")
 print(f"  Cheb poly time : {cheb_time_full:.4f} s")
-print("  Errors (RMSE / SE):")
-print(f"    GP poly   : {rmse_poly_full:.4e} / {se_poly_full:.4e}")
-print(f"    Chebyshev : {rmse_cheb_full:.4e} / {se_cheb_full:.4e}")
-print(f"    GP vs Cheb: {rmse_poly_vs_cheb_full:.4e} / {se_poly_vs_cheb_full:.4e}")
-print("  Relative errors (mean_rel / max_rel):")
-print(f"    GP poly   : {mean_rel_poly_full:.4e} / {max_rel_poly_full:.4e}")
-print(f"    Chebyshev : {mean_rel_cheb_full:.4e} / {max_rel_cheb_full:.4e}")
+print("  Cross-entropy loss (SiLU as target, Bernoulli proxy):")
+print(f"    GP poly   : {ce_poly_full:.4e}")
+print(f"    Chebyshev : {ce_cheb_full:.4e}")
+print("  Relative error metrics:")
+print("    mean_rel: average of |approx - SiLU| / max(|SiLU|, eps)")
+print("    max_rel : maximum of that relative error over the dataset")
+print(f"    GP poly   : mean_rel={mean_rel_poly_full:.4e}, max_rel={max_rel_poly_full:.4e}")
+print(f"    Chebyshev : mean_rel={mean_rel_cheb_full:.4e}, max_rel={max_rel_cheb_full:.4e}")
 print("  GP-style error loss (mean_rel + 0.5 * max_rel):")
 print(f"    GP poly   : {loss_poly_full:.4e}")
 print(f"    Chebyshev : {loss_cheb_full:.4e}")
@@ -220,10 +225,9 @@ sample_size = 250_000
 sample_size = min(sample_size, x_np.shape[0])
 rng = np.random.default_rng(seed=42)
 
-rmse_results = {"gp": [], "cheb": []}
-se_results = {"gp": [], "cheb": []}
 mean_rel_results = {"gp": [], "cheb": []}
 max_rel_results = {"gp": [], "cheb": []}
+ce_results = {"gp": [], "cheb": []}
 
 print(f"\n=== Multi-run subset evaluation ===")
 print(f"  trials         : {num_trials}")
@@ -261,44 +265,37 @@ for trial in range(num_trials):
     t1 = time.perf_counter()
     cheb_time = t1 - t0
 
-    rmse_poly, se_poly = rmse_and_se(y_silu, y_poly)
-    rmse_cheb, se_cheb = rmse_and_se(y_silu, y_cheb)
-
     mean_rel_poly, max_rel_poly = mean_max_rel(y_poly, y_silu)
     mean_rel_cheb, max_rel_cheb = mean_max_rel(y_cheb, y_silu)
 
-    rmse_results["gp"].append(rmse_poly)
-    rmse_results["cheb"].append(rmse_cheb)
-    se_results["gp"].append(se_poly)
-    se_results["cheb"].append(se_cheb)
+    ce_poly = cross_entropy_loss(y_poly, y_silu)
+    ce_cheb = cross_entropy_loss(y_cheb, y_silu)
+
     mean_rel_results["gp"].append(mean_rel_poly)
     mean_rel_results["cheb"].append(mean_rel_cheb)
     max_rel_results["gp"].append(max_rel_poly)
     max_rel_results["cheb"].append(max_rel_cheb)
+    ce_results["gp"].append(ce_poly)
+    ce_results["cheb"].append(ce_cheb)
 
     print(
         f"  trial {trial+1}: "
         f"SiLU {silu_time:.4f}s, "
-        f"GP {poly_time:.4f}s (RMSE {rmse_poly:.3e}, mean_rel {mean_rel_poly:.2e}), "
-        f"Cheb {cheb_time:.4f}s (RMSE {rmse_cheb:.3e}, mean_rel {mean_rel_cheb:.2e})"
+        f"GP {poly_time:.4f}s (CE {ce_poly:.3e}, mean_rel {mean_rel_poly:.2e}), "
+        f"Cheb {cheb_time:.4f}s (CE {ce_cheb:.3e}, mean_rel {mean_rel_cheb:.2e})"
     )
 
-rmse_gp = np.array(rmse_results["gp"])
-rmse_cheb = np.array(rmse_results["cheb"])
-se_gp = np.array(se_results["gp"])
-se_cheb = np.array(se_results["cheb"])
 mean_rel_gp = np.array(mean_rel_results["gp"])
 mean_rel_cheb = np.array(mean_rel_results["cheb"])
 max_rel_gp = np.array(max_rel_results["gp"])
 max_rel_cheb = np.array(max_rel_results["cheb"])
+ce_gp = np.array(ce_results["gp"])
+ce_cheb = np.array(ce_results["cheb"])
 
 print("\n=== Aggregate error statistics over trials ===")
-print("  RMSE (mean ± std):")
-print(f"    GP poly   : {rmse_gp.mean():.4e} ± {rmse_gp.std():.4e}")
-print(f"    Chebyshev : {rmse_cheb.mean():.4e} ± {rmse_cheb.std():.4e}")
-print("  SE (mean ± std):")
-print(f"    GP poly   : {se_gp.mean():.4e} ± {se_gp.std():.4e}")
-print(f"    Chebyshev : {se_cheb.mean():.4e} ± {se_cheb.std():.4e}")
+print("  Cross-entropy loss (mean ± std):")
+print(f"    GP poly   : {ce_gp.mean():.4e} ± {ce_gp.std():.4e}")
+print(f"    Chebyshev : {ce_cheb.mean():.4e} ± {ce_cheb.std():.4e}")
 print("  mean_rel (mean ± std):")
 print(f"    GP poly   : {mean_rel_gp.mean():.4e} ± {mean_rel_gp.std():.4e}")
 print(f"    Chebyshev : {mean_rel_cheb.mean():.4e} ± {mean_rel_cheb.std():.4e}")
@@ -307,29 +304,28 @@ print(f"    GP poly   : {max_rel_gp.mean():.4e} ± {max_rel_gp.std():.4e}")
 print(f"    Chebyshev : {max_rel_cheb.mean():.4e} ± {max_rel_cheb.std():.4e}")
 
 # -----------------------------
-# 4) Boxplots for RMSE and SE
+# 4) Boxplots for cross-entropy and mean_rel
 # -----------------------------
 labels = ["GP poly", "Chebyshev"]
 
 plt.figure(figsize=(6, 4))
-plt.boxplot([rmse_gp, rmse_cheb], labels=labels, showmeans=True)
-plt.ylabel("RMSE (SiLU vs approximation)")
-plt.title(f"SiLU approximation RMSE over {num_trials} random subsets")
+plt.boxplot([ce_gp, ce_cheb], labels=labels, showmeans=True)
+plt.ylabel("Cross-entropy loss (Bernoulli proxy)")
+plt.title(f"SiLU approximation cross-entropy over {num_trials} random subsets")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-rmse_plot_path = "silu_rmse_boxplot.png"
-plt.savefig(rmse_plot_path, dpi=150)
+ce_plot_path = "silu_ce_boxplot.png"
+plt.savefig(ce_plot_path, dpi=150)
 
 plt.figure(figsize=(6, 4))
-plt.boxplot([se_gp, se_cheb], labels=labels, showmeans=True)
-plt.ylabel("SE (sum of squared errors)")
-plt.yscale("log")
-plt.title(f"SiLU approximation SE over {num_trials} random subsets")
+plt.boxplot([mean_rel_gp, mean_rel_cheb], labels=labels, showmeans=True)
+plt.ylabel("mean_rel (avg relative error)")
+plt.title(f"SiLU approximation mean_rel over {num_trials} random subsets")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-se_plot_path = "silu_se_boxplot.png"
-plt.savefig(se_plot_path, dpi=150)
+mean_rel_plot_path = "silu_mean_rel_boxplot.png"
+plt.savefig(mean_rel_plot_path, dpi=150)
 
 print("\nSaved boxplots:")
-print(f"  RMSE: {rmse_plot_path}")
-print(f"  SE  : {se_plot_path}")
+print(f"  Cross-entropy: {ce_plot_path}")
+print(f"  mean_rel     : {mean_rel_plot_path}")
