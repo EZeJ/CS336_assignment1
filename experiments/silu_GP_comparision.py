@@ -110,6 +110,17 @@ dtype = torch.float32
 # -----------------------------
 # Utility: error metrics
 # -----------------------------
+def rmse_and_se(a: torch.Tensor, b: torch.Tensor):
+    """
+    Root-mean-squared error and sum of squared errors.
+    """
+    diff = a - b
+    mse = torch.mean(diff ** 2)
+    rmse = torch.sqrt(mse)
+    se = torch.sum(diff ** 2)
+    return rmse.item(), se.item()
+
+
 def mean_max_rel(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-6):
     """
     Mean/max relative error, matching GP's _safe_rel_err definition.
@@ -200,6 +211,9 @@ if device.type == "cuda":
 t1 = time.perf_counter()
 cheb_time_full = t1 - t0
 
+rmse_poly_full, se_poly_full = rmse_and_se(y_poly_full, y_silu_full)
+rmse_cheb_full, se_cheb_full = rmse_and_se(y_cheb_full, y_silu_full)
+
 mean_rel_poly_full, max_rel_poly_full = mean_max_rel(y_poly_full, y_silu_full)
 mean_rel_cheb_full, max_rel_cheb_full = mean_max_rel(y_cheb_full, y_silu_full)
 
@@ -226,6 +240,9 @@ print("\n=== Single-run summary on full dataset ===")
 print(f"  SiLU time      : {silu_time_full:.4f} s")
 print(f"  GP poly time   : {poly_time_full:.4f} s")
 print(f"  Cheb poly time : {cheb_time_full:.4f} s")
+print("  RMSE / SE against SiLU:")
+print(f"    GP poly   : RMSE={rmse_poly_full:.4e}, SE={se_poly_full:.4e}")
+print(f"    Chebyshev : RMSE={rmse_cheb_full:.4e}, SE={se_cheb_full:.4e}")
 print("  Cross-entropy loss (SiLU as target, Bernoulli proxy):")
 print(f"    GP poly   : {ce_poly_full:.4e}")
 print(f"    Chebyshev : {ce_cheb_full:.4e}")
@@ -246,6 +263,8 @@ sample_size = 250_000
 sample_size = min(sample_size, x_np.shape[0])
 rng = np.random.default_rng(seed=42)
 
+rmse_results = {"gp": [], "cheb": []}
+se_results = {"gp": [], "cheb": []}
 mean_rel_results = {"gp": [], "cheb": []}
 max_rel_results = {"gp": [], "cheb": []}
 ce_results = {"gp": [], "cheb": []}
@@ -286,12 +305,19 @@ for trial in range(num_trials):
     t1 = time.perf_counter()
     cheb_time = t1 - t0
 
+    rmse_poly, se_poly = rmse_and_se(y_poly, y_silu)
+    rmse_cheb, se_cheb = rmse_and_se(y_cheb, y_silu)
+
     mean_rel_poly, max_rel_poly = mean_max_rel(y_poly, y_silu)
     mean_rel_cheb, max_rel_cheb = mean_max_rel(y_cheb, y_silu)
 
     ce_poly = cross_entropy_loss(y_poly, y_silu)
     ce_cheb = cross_entropy_loss(y_cheb, y_silu)
 
+    rmse_results["gp"].append(rmse_poly)
+    rmse_results["cheb"].append(rmse_cheb)
+    se_results["gp"].append(se_poly)
+    se_results["cheb"].append(se_cheb)
     mean_rel_results["gp"].append(mean_rel_poly)
     mean_rel_results["cheb"].append(mean_rel_cheb)
     max_rel_results["gp"].append(max_rel_poly)
@@ -302,10 +328,14 @@ for trial in range(num_trials):
     print(
         f"  trial {trial+1}: "
         f"SiLU {silu_time:.4f}s, "
-        f"GP {poly_time:.4f}s (CE {ce_poly:.3e}, mean_rel {mean_rel_poly:.2e}), "
-        f"Cheb {cheb_time:.4f}s (CE {ce_cheb:.3e}, mean_rel {mean_rel_cheb:.2e})"
+        f"GP {poly_time:.4f}s (RMSE {rmse_poly:.3e}, CE {ce_poly:.3e}, mean_rel {mean_rel_poly:.2e}), "
+        f"Cheb {cheb_time:.4f}s (RMSE {rmse_cheb:.3e}, CE {ce_cheb:.3e}, mean_rel {mean_rel_cheb:.2e})"
     )
 
+rmse_gp = np.array(rmse_results["gp"])
+rmse_cheb = np.array(rmse_results["cheb"])
+se_gp = np.array(se_results["gp"])
+se_cheb = np.array(se_results["cheb"])
 mean_rel_gp = np.array(mean_rel_results["gp"])
 mean_rel_cheb = np.array(mean_rel_results["cheb"])
 max_rel_gp = np.array(max_rel_results["gp"])
@@ -314,6 +344,12 @@ ce_gp = np.array(ce_results["gp"])
 ce_cheb = np.array(ce_results["cheb"])
 
 print("\n=== Aggregate error statistics over trials ===")
+print("  RMSE (mean ± std):")
+print(f"    GP poly   : {rmse_gp.mean():.4e} ± {rmse_gp.std():.4e}")
+print(f"    Chebyshev : {rmse_cheb.mean():.4e} ± {rmse_cheb.std():.4e}")
+print("  SE (mean ± std):")
+print(f"    GP poly   : {se_gp.mean():.4e} ± {se_gp.std():.4e}")
+print(f"    Chebyshev : {se_cheb.mean():.4e} ± {se_cheb.std():.4e}")
 print("  Cross-entropy loss (mean ± std):")
 print(f"    GP poly   : {ce_gp.mean():.4e} ± {ce_gp.std():.4e}")
 print(f"    Chebyshev : {ce_cheb.mean():.4e} ± {ce_cheb.std():.4e}")
