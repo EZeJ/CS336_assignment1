@@ -206,10 +206,15 @@ mean_rel_cheb_full, max_rel_cheb_full = mean_max_rel(y_cheb_full, y_silu_full)
 ce_poly_full = cross_entropy_loss(y_poly_full, y_silu_full)
 ce_cheb_full = cross_entropy_loss(y_cheb_full, y_silu_full)
 
-# Residuals on full dataset (approx - true).
-res_poly_full = (y_poly_full - y_silu_full).detach().cpu().numpy().astype(np.float32)
-res_cheb_full = (y_cheb_full - y_silu_full).detach().cpu().numpy().astype(np.float32)
+# Residuals on full dataset as signed relative errors:
+#   (approx - SiLU) / max(|SiLU|, eps)
+eps_rel = 1e-6
 y_silu_full_np = y_silu_full.detach().cpu().numpy().astype(np.float32)
+y_poly_full_np = y_poly_full.detach().cpu().numpy().astype(np.float32)
+y_cheb_full_np = y_cheb_full.detach().cpu().numpy().astype(np.float32)
+denom_np = np.maximum(np.abs(y_silu_full_np), eps_rel)
+res_poly_full = (y_poly_full_np - y_silu_full_np) / denom_np
+res_cheb_full = (y_cheb_full_np - y_silu_full_np) / denom_np
 
 # GP-style error-only loss (ignoring degree/multiplies/depth terms)
 MEAN_REL_WEIGHT = 1.0
@@ -375,15 +380,15 @@ plt.subplot(1, 2, 1)
 plt.scatter(y_true_scatter, res_poly_scatter, s=1, alpha=0.3)
 plt.axhline(0.0, color="black", linewidth=1, linestyle="--")
 plt.xlabel("SiLU(x)")
-plt.ylabel("Residual (GP poly - SiLU)")
-plt.title("GP poly residuals vs SiLU")
+plt.ylabel("Relative residual (GP poly - SiLU)")
+plt.title("GP poly relative residuals vs SiLU")
 
 plt.subplot(1, 2, 2)
 plt.scatter(y_true_scatter, res_cheb_scatter, s=1, alpha=0.3, color="tab:orange")
 plt.axhline(0.0, color="black", linewidth=1, linestyle="--")
 plt.xlabel("SiLU(x)")
-plt.ylabel("Residual (Chebyshev - SiLU)")
-plt.title("Chebyshev residuals vs SiLU")
+plt.ylabel("Relative residual (Chebyshev - SiLU)")
+plt.title("Chebyshev relative residuals vs SiLU")
 
 plt.tight_layout()
 residual_scatter_path = output_dir / "silu_residuals_vs_true.png"
@@ -397,9 +402,9 @@ limit = float(limit) if limit > 0 else 1.0
 bins = np.linspace(-limit, limit, 201)
 plt.hist(res_poly_full, bins=bins, alpha=0.5, label="GP poly", density=True)
 plt.hist(res_cheb_full, bins=bins, alpha=0.5, label="Chebyshev", density=True)
-plt.xlabel("Residual (approx - SiLU)")
+plt.xlabel("Relative residual (approx - SiLU)")
 plt.ylabel("Density")
-plt.title("Residual histograms (clipped to 99.5% range)")
+plt.title("Relative residual histograms (clipped to 99.5% range)")
 plt.legend()
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
