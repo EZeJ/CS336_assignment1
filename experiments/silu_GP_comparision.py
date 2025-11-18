@@ -3,8 +3,10 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+from datetime import datetime
+import warnings
 
-import warnings; warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
+warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
 
 
 def expr_torch(x):
@@ -159,6 +161,12 @@ print(f"  path        : {npz_path}")
 print(f"  signals     : {silu_keys}")
 print(f"  total points: {x_np.shape[0]:,}")
 
+# Create a dated subfolder under experiments for all plots.
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_silu_stats")
+output_dir = this_dir / timestamp
+output_dir.mkdir(parents=True, exist_ok=True)
+print(f"  plots dir   : {output_dir}")
+
 x_full = torch.from_numpy(x_np).to(device=device, dtype=dtype)
 print(f"  tensor      : shape={tuple(x_full.shape)}, device={device}, dtype={dtype}")
 
@@ -197,6 +205,11 @@ mean_rel_cheb_full, max_rel_cheb_full = mean_max_rel(y_cheb_full, y_silu_full)
 
 ce_poly_full = cross_entropy_loss(y_poly_full, y_silu_full)
 ce_cheb_full = cross_entropy_loss(y_cheb_full, y_silu_full)
+
+# Residuals on full dataset (approx - true).
+res_poly_full = (y_poly_full - y_silu_full).detach().cpu().numpy().astype(np.float32)
+res_cheb_full = (y_cheb_full - y_silu_full).detach().cpu().numpy().astype(np.float32)
+y_silu_full_np = y_silu_full.detach().cpu().numpy().astype(np.float32)
 
 # GP-style error-only loss (ignoring degree/multiplies/depth terms)
 MEAN_REL_WEIGHT = 1.0
@@ -317,7 +330,7 @@ plt.ylabel("Cross-entropy loss (Bernoulli proxy)")
 plt.title(f"SiLU approximation cross-entropy over {num_trials} random subsets")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-ce_plot_path = "silu_ce_boxplot.png"
+ce_plot_path = output_dir / "silu_ce_boxplot.png"
 plt.savefig(ce_plot_path, dpi=150)
 
 plt.figure(figsize=(6, 4))
@@ -326,7 +339,7 @@ plt.ylabel("mean_rel (avg relative error)")
 plt.title(f"SiLU approximation mean_rel over {num_trials} random subsets")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-mean_rel_plot_path = "silu_mean_rel_boxplot.png"
+mean_rel_plot_path = output_dir / "silu_mean_rel_boxplot.png"
 plt.savefig(mean_rel_plot_path, dpi=150)
 
 plt.figure(figsize=(6, 4))
@@ -336,10 +349,66 @@ plt.yscale("log")
 plt.title(f"SiLU approximation max_rel over {num_trials} random subsets")
 plt.grid(axis="y", alpha=0.3)
 plt.tight_layout()
-max_rel_plot_path = "silu_max_rel_boxplot.png"
+max_rel_plot_path = output_dir / "silu_max_rel_boxplot.png"
 plt.savefig(max_rel_plot_path, dpi=150)
 
-print("\nSaved boxplots:")
-print(f"  Cross-entropy: {ce_plot_path}")
-print(f"  mean_rel     : {mean_rel_plot_path}")
-print(f"  max_rel      : {max_rel_plot_path}")
+# -----------------------------
+# 5) Residual diagnostics on full dataset
+# -----------------------------
+# For scatter-type plots, downsample for readability.
+max_points_scatter = 200_000
+n_full = y_silu_full_np.shape[0]
+if n_full > max_points_scatter:
+    rng_scatter = np.random.default_rng(seed=0)
+    idx_scatter = rng_scatter.choice(n_full, size=max_points_scatter, replace=False)
+    y_true_scatter = y_silu_full_np[idx_scatter]
+    res_poly_scatter = res_poly_full[idx_scatter]
+    res_cheb_scatter = res_cheb_full[idx_scatter]
+else:
+    y_true_scatter = y_silu_full_np
+    res_poly_scatter = res_poly_full
+    res_cheb_scatter = res_cheb_full
+
+# Residual vs true SiLU output for both models.
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+plt.scatter(y_true_scatter, res_poly_scatter, s=1, alpha=0.3)
+plt.axhline(0.0, color="black", linewidth=1, linestyle="--")
+plt.xlabel("SiLU(x)")
+plt.ylabel("Residual (GP poly - SiLU)")
+plt.title("GP poly residuals vs SiLU")
+
+plt.subplot(1, 2, 2)
+plt.scatter(y_true_scatter, res_cheb_scatter, s=1, alpha=0.3, color="tab:orange")
+plt.axhline(0.0, color="black", linewidth=1, linestyle="--")
+plt.xlabel("SiLU(x)")
+plt.ylabel("Residual (Chebyshev - SiLU)")
+plt.title("Chebyshev residuals vs SiLU")
+
+plt.tight_layout()
+residual_scatter_path = output_dir / "silu_residuals_vs_true.png"
+plt.savefig(residual_scatter_path, dpi=150)
+
+# Histograms of residuals for both models on shared scale.
+plt.figure(figsize=(6, 4))
+all_res = np.concatenate([res_poly_full, res_cheb_full])
+limit = np.quantile(np.abs(all_res), 0.995)
+limit = float(limit) if limit > 0 else 1.0
+bins = np.linspace(-limit, limit, 201)
+plt.hist(res_poly_full, bins=bins, alpha=0.5, label="GP poly", density=True)
+plt.hist(res_cheb_full, bins=bins, alpha=0.5, label="Chebyshev", density=True)
+plt.xlabel("Residual (approx - SiLU)")
+plt.ylabel("Density")
+plt.title("Residual histograms (clipped to 99.5% range)")
+plt.legend()
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+residual_hist_path = output_dir / "silu_residual_histograms.png"
+plt.savefig(residual_hist_path, dpi=150)
+
+print("\nSaved plots:")
+print(f"  Cross-entropy boxplot: {ce_plot_path}")
+print(f"  mean_rel boxplot     : {mean_rel_plot_path}")
+print(f"  max_rel boxplot      : {max_rel_plot_path}")
+print(f"  residual scatter     : {residual_scatter_path}")
+print(f"  residual histograms  : {residual_hist_path}")
