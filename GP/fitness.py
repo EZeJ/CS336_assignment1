@@ -44,15 +44,23 @@ def compute_metrics(
     depth = expr.depth()
     term_count = expr.term_count()
 
-    loss = (
-        weights.mean_rel * mean_rel
-        + weights.max_rel * max_rel
-        + weights.degree * degree
-        + weights.multiplies * multiplies
-        + weights.depth * depth
-    )
-    if max_terms is not None and term_count > max_terms:
-        loss += term_penalty * (term_count - max_terms)
+    # Original multi-objective loss (kept for reference):
+    # loss = (
+    #     weights.mean_rel * mean_rel
+    #     + weights.max_rel * max_rel
+    #     + weights.degree * degree
+    #     + weights.multiplies * multiplies
+    #     + weights.depth * depth
+    # )
+    # if max_terms is not None and term_count > max_terms:
+    #     loss += term_penalty * (term_count - max_terms)
+
+    # New accuracy-focused loss using RMSE + SE
+    sq_err = (pred - target) ** 2
+    rmse = float(np.sqrt(np.mean(sq_err)))
+    se = float(np.sum(sq_err))
+    loss = rmse + se
+
     return Metrics(
         loss=loss,
         mean_rel=mean_rel,
