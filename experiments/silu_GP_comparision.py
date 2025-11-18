@@ -1,179 +1,61 @@
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
+from pathlib import Path
+
 
 def expr_torch(x):
     # Accept Python floats / lists as well
     if not torch.is_tensor(x):
         x = torch.tensor(x, dtype=torch.float32)
 
-    return (-0.1248 * (
-        (((-1.047 * x) +
-          ((2.346 * (x + 3.576)) * ((2.346 * -0.9396) * (3.809 + 1.33)))) +
-         (
-             (
-                 (-0.1248 * (
-                     (
-                         (
-                             (x + (2.437 * x)) *
-                             ((2.346 * -0.9396) * 3.221)
-                         ) +
-                         (
-                             (2.346 * -0.9396) *
-                             (
-                                 ((3.809 + x) *
-                                  (
-                                      ((2.346 * ((-2.417 + x) * x)) *
-                                       (2.346 * -0.9396)) +
-                                      (2.437 * x)
-                                  )
-                                 ) +
-                                 (3.809 + x)
-                             )
-                         ) +
-                         -2.236
-                     ) +
-                     (
-                         (
-                             1.494 +
-                             (
-                                 ((3.809 + x) *
-                                  (
-                                      (2.346 *
-                                       ((-2.417 + x) *
-                                        (3.809 + (1.906 + 2.385)))) *
-                                      (2.346 * -0.9396)
-                                  ) +
-                                  0.6062
-                                 )
-                             ) +
-                             (
-                                 (
-                                     ((-2.417 + x) * x) +
-                                     (2.346 * (3.809 + 1.33))
-                                 ) +
-                                 (x * x) +
-                                 x
-                             )
-                         ) *
-                         (3.809 +
-                          ((x + (0.08281 + x)) + (3.809 + 1.33)))
-                     )
-                 )) *
-                 (
-                     ((x + x) * (2.346 * -0.9396)) +
-                     ((x + x) + (2.437 * x))
-                 )
-             ) +
-             (
-                 (3.809 + x) *
-                 (
-                     ((x + (0.1279 + x)) * (2.346 * -0.9396)) +
-                     (3.918 * -0.9396)
-                 )
-             ) +
-             (
-                 (-0.5138 * (x + ((0.3614 + x) + 0.5313))) +
-                 ((2.346 * -0.9396) * (3.809 + 1.33))
-             ) +
-             (
-                 -1.891 * (-2.07 + (3.809 + 3.848))
-             )
-         )
-        ) *
-        (
-            ((x + x) * (2.346 * -0.9396)) +
-            ((x + x) + (2.437 * x))
-        )
-    ))
+    # return (-0.1248 * ((((-1.047 * x) + ((2.346 * (x + 3.576)) * ((2.346 * -0.9396) * (3.809 + 1.33)))) + ((((-0.1248 * (((((2.437 * x) * ((2.346 * -0.9396) * 3.221)) + (((2.346 * -0.9396) * (((3.809 + x) * (((2.346 * ((-2.417 + x) * x)) * -2.892) + (2.437 * x))) + (2.437 * x))) + -2.236)) + ((1.494 + (((3.809 + x) * (((2.346 * ((-2.417 + x) * (3.809 + (1.906 + 2.385)))) * (2.346 * -0.9396)) + (3.313 + -2.083))) + (((((-3.206 + x) * (x + (-0.8878 + x))) + (-2.417 + x)) + (x * x)) + (x * -2.666)))) * (3.809 + ((x + (0.1279 + x)) + (3.809 + 1.33))))) * (((x + x) * (2.346 * -0.9396)) + ((x + x) + (2.437 * x))))) + ((3.809 + x) * (((x + ((0.3614 + x) + 0.5313)) * (2.346 * -0.9396)) + (2.346 * -0.9396)))) + ((-0.5138 * (x + (((x + 0.6101) + 0.5313) + 0.5313))) + ((2.346 * -0.9396) * (3.809 + 1.33)))) + (-1.891 * (-2.07 + (3.809 + 3.848))))) * (((x + x) * (2.346 * -0.9396)) + ((x + x) + (2.437 * x)))))
+    return (-0.1248 * ((((-1.047 * x) + ((2.346 * (x + 3.576)) * ((2.346 * -0.9396) * (3.809 + 1.33)))) + ((((-0.1248 * (((((2.437 * x) * ((2.346 * -0.9396) * 3.221)) + (((2.346 * -0.9396) * (((3.809 + x) * (((2.346 * ((-2.417 + x) * x)) * -2.892) + (2.437 * x))) + (2.437 * x))) + -2.236)) + ((1.494 + (((3.809 + x) * (((2.346 * ((-2.417 + x) * (3.809 + (1.906 + 2.385)))) * (2.346 * -0.9396)) + (3.313 + -2.083))) + (((((-3.206 + x) * (x + (-0.8878 + x))) + (-3.266 + x)) + (x * x)) + (x * -2.666)))) * (3.809 + ((x + (0.1279 + x)) + (3.809 + 1.33))))) * (((x + x) * (2.346 * -0.9396)) + ((x + x) + (2.437 * x))))) + ((3.809 + x) * (((x + ((0.3614 + x) + 0.5313)) * (2.346 * -0.9396)) + (2.346 * -0.9396)))) + ((-0.5138 * (x + (((x + 0.6101) + 0.5313) + 0.5313))) + ((2.346 * -0.9396) * (3.809 + 1.33)))) + (-1.891 * (-2.07 + (3.809 + 3.848))))) * (((x + x) * (2.346 * -0.9396)) + ((x + x) + (2.437 * x)))))
 
 
-import numpy as np
+# -----------------------------
+# Chebyshev approximation of SiLU
+# (gate used inside SwiGLU), fit
+# on x in [-6, 6] and converted
+# to a power-series polynomial.
+# Coefficients were generated via
+# numpy.polynomial.Chebyshev.fit.
+# -----------------------------
+_CHEB_SILU_COEFFS_LIST = [
+    1.58679809e-02,
+    5.00000000e-01,
+    2.19307009e-01,
+    -1.06282049e-15,
+    -9.91605229e-03,
+    8.46262408e-17,
+    2.77574206e-04,
+    -2.73674466e-18,
+    -3.00910333e-06,
+    3.09898453e-20,
+]
 
-def expr_numpy(x):
-    x = np.asarray(x, dtype=np.float64)
+CHEB_SILU_COEFFS_TORCH = torch.tensor(_CHEB_SILU_COEFFS_LIST, dtype=torch.float32)
 
-    return (-0.1248 * (
-        (((-1.047 * x) +
-          ((2.346 * (x + 3.576)) * ((2.346 * -0.9396) * (3.809 + 1.33)))) +
-         (
-             (
-                 (-0.1248 * (
-                     (
-                         (
-                             (x + (2.437 * x)) *
-                             ((2.346 * -0.9396) * 3.221)
-                         ) +
-                         (
-                             (2.346 * -0.9396) *
-                             (
-                                 ((3.809 + x) *
-                                  (
-                                      ((2.346 * ((-2.417 + x) * x)) *
-                                       (2.346 * -0.9396)) +
-                                      (2.437 * x)
-                                  )
-                                 ) +
-                                 (3.809 + x)
-                             )
-                         ) +
-                         -2.236
-                     ) +
-                     (
-                         (
-                             1.494 +
-                             (
-                                 ((3.809 + x) *
-                                  (
-                                      (2.346 *
-                                       ((-2.417 + x) *
-                                        (3.809 + (1.906 + 2.385)))) *
-                                      (2.346 * -0.9396)
-                                  ) +
-                                  0.6062
-                                 )
-                             ) +
-                             (
-                                 (
-                                     ((-2.417 + x) * x) +
-                                     (2.346 * (3.809 + 1.33))
-                                 ) +
-                                 (x * x) +
-                                 x
-                             )
-                         ) *
-                         (3.809 +
-                          ((x + (0.08281 + x)) + (3.809 + 1.33)))
-                     )
-                 )) *
-                 (
-                     ((x + x) * (2.346 * -0.9396)) +
-                     ((x + x) + (2.437 * x))
-                 )
-             ) +
-             (
-                 (3.809 + x) *
-                 (
-                     ((x + (0.1279 + x)) * (2.346 * -0.9396)) +
-                     (3.918 * -0.9396)
-                 )
-             ) +
-             (
-                 (-0.5138 * (x + ((0.3614 + x) + 0.5313))) +
-                 ((2.346 * -0.9396) * (3.809 + 1.33))
-             ) +
-             (
-                 -1.891 * (-2.07 + (3.809 + 3.848))
-             )
-         )
-        ) *
-        (
-            ((x + x) * (2.346 * -0.9396)) +
-            ((x + x) + (2.437 * x))
-        )
-    ))
+
+def cheb_silu_torch(x):
+    """
+    Chebyshev-based polynomial approximation to SiLU on [-6, 6].
+    Evaluated via Horner's rule in torch.
+    """
+    if not torch.is_tensor(x):
+        x = torch.tensor(x, dtype=torch.float32)
+
+    # Clamp to fit domain used for the approximation.
+    x_clamped = torch.clamp(x, -6.0, 6.0)
+    coeffs = CHEB_SILU_COEFFS_TORCH.to(device=x_clamped.device, dtype=x_clamped.dtype)
+
+    y = torch.zeros_like(x_clamped)
+    for c in reversed(coeffs):
+        y = y * x_clamped + c
+    return y
 
 
 import math
-import torch
 from torch import nn, Tensor
 
 def silu(x: Tensor) -> Tensor:
@@ -221,40 +103,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 dtype = torch.float32
 
 # -----------------------------
-# Assume these are already defined from previous step:
-#   expr_torch(x: torch.Tensor) -> torch.Tensor
-#   expr_numpy(x: np.ndarray) -> np.ndarray
-# -----------------------------
-# from your_poly_module import expr_torch, expr_numpy
-
-# -----------------------------
-# SwiGLU module (from above)
-# -----------------------------
-class SwiGLU(torch.nn.Module):
-    def __init__(self, d_model: int, d_ff: int | None = None,
-                 device=None, dtype=None) -> None:
-        super().__init__()
-        self.d_model = d_model
-        self.d_ff = d_ff if d_ff is not None else self._compute_d_ff(d_model)
-
-        self.w1 = torch.nn.Linear(d_model, self.d_ff, device=device, dtype=dtype)
-        self.w3 = torch.nn.Linear(d_model, self.d_ff, device=device, dtype=dtype)
-        self.w2 = torch.nn.Linear(self.d_ff, d_model, device=device, dtype=dtype)
-
-    @staticmethod
-    def _compute_d_ff(d_model: int) -> int:
-        rough = (8 * d_model) / 3
-        d_ff = math.ceil(rough / 64) * 64
-        return int(d_ff)
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        wx1 = self.w1(x)
-        wx3 = self.w3(x)
-        silu_wx1 = wx1 * torch.sigmoid(wx1)  # SiLU(wx1)
-        return self.w2(silu_wx1 * wx3)
-
-
-# -----------------------------
 # Utility: timing + error metrics
 # -----------------------------
 def rmse_and_se(a: torch.Tensor, b: torch.Tensor):
@@ -271,63 +119,169 @@ def rmse_and_se(a: torch.Tensor, b: torch.Tensor):
 
 
 # -----------------------------
-# 1) Create 1000 inputs
-# Shape: (batch_size, context_length, d_model)
+# 1) Load real SiLU inputs from activations_all.npz
+#    We gather all signals whose name ends with 'silu_in'
+#    (e.g., layer0_silu_in, layer1_silu_in) and concatenate.
 # -----------------------------
-torch.manual_seed(0)
-x = torch.randn(batch_size, context_length, d_model, device=device, dtype=dtype)
-print(f"Input shape: {tuple(x.shape)}")
+this_dir = Path(__file__).resolve().parent
+npz_path = this_dir.parent / "GP" / "datasets" / "raw" / "20251116_210338" / "activations_all.npz"
+data_npz = np.load(npz_path, allow_pickle=True)
+
+silu_keys = [k for k in data_npz.files if k.endswith("silu_in") and not k.endswith("_epoch")]
+if not silu_keys:
+    raise RuntimeError(f"No *silu_in signals found in {npz_path}")
+
+x_np = np.concatenate([data_npz[k].astype(np.float32) for k in silu_keys])
+print("=== Loaded SiLU inputs ===")
+print(f"  path        : {npz_path}")
+print(f"  signals     : {silu_keys}")
+print(f"  total points: {x_np.shape[0]:,}")
+
+x_full = torch.from_numpy(x_np).to(device=device, dtype=dtype)
+print(f"  tensor      : shape={tuple(x_full.shape)}, device={device}, dtype={dtype}")
 
 # -----------------------------
-# 2) Run SwiGLU
+# 2) Single-run summary on full dataset
 # -----------------------------
-swiglu = SwiGLU(d_model=d_model, d_ff=d_ff, device=device, dtype=dtype)
-
 if device.type == "cuda":
     torch.cuda.synchronize()
-
 t0 = time.perf_counter()
-y_swiglu = swiglu(x)
+y_silu_full = silu(x_full)
 if device.type == "cuda":
     torch.cuda.synchronize()
 t1 = time.perf_counter()
+silu_time_full = t1 - t0
 
-swiglu_time = t1 - t0
-print(f"SwiGLU time: {swiglu_time:.4f} s, output shape = {tuple(y_swiglu.shape)}")
-
-# -----------------------------
-# 3) Polynomial (PyTorch)
-# -----------------------------
 if device.type == "cuda":
     torch.cuda.synchronize()
-
 t0 = time.perf_counter()
-y_poly_torch = expr_torch(x)  # <-- your big polynomial in torch
+y_poly_full = expr_torch(x_full)
 if device.type == "cuda":
     torch.cuda.synchronize()
 t1 = time.perf_counter()
+poly_time_full = t1 - t0
 
-poly_torch_time = t1 - t0
-print(f"Poly (torch) time: {poly_torch_time:.4f} s")
-
-# Error metrics between SwiGLU and Torch polynomial
-rmse_torch, se_torch = rmse_and_se(y_swiglu, y_poly_torch)
-print(f"[SwiGLU vs poly_torch] RMSE = {rmse_torch:.6e}, SE = {se_torch:.6e}")
-
-# -----------------------------
-# 4) Polynomial (NumPy)
-#    Note: runs on CPU; we convert x to NumPy and back.
-# -----------------------------
-x_cpu = x.detach().cpu().numpy().astype(np.float32)
-
+if device.type == "cuda":
+    torch.cuda.synchronize()
 t0 = time.perf_counter()
-y_poly_np = expr_numpy(x_cpu)  # <-- your big polynomial in numpy
+y_cheb_full = cheb_silu_torch(x_full)
+if device.type == "cuda":
+    torch.cuda.synchronize()
 t1 = time.perf_counter()
-poly_numpy_time = t1 - t0
-print(f"Poly (numpy) time: {poly_numpy_time:.4f} s")
+cheb_time_full = t1 - t0
 
-# bring NumPy result back to torch for comparison
-y_poly_np_torch = torch.from_numpy(y_poly_np).to(device=device, dtype=dtype)
+rmse_poly_full, se_poly_full = rmse_and_se(y_silu_full, y_poly_full)
+rmse_cheb_full, se_cheb_full = rmse_and_se(y_silu_full, y_cheb_full)
+rmse_poly_vs_cheb_full, se_poly_vs_cheb_full = rmse_and_se(y_poly_full, y_cheb_full)
 
-rmse_np, se_np = rmse_and_se(y_swiglu, y_poly_np_torch)
-print(f"[SwiGLU vs poly_numpy] RMSE = {rmse_np:.6e}, SE = {se_np:.6e}")
+print("\n=== Single-run summary on full dataset ===")
+print(f"  SiLU time      : {silu_time_full:.4f} s")
+print(f"  GP poly time   : {poly_time_full:.4f} s")
+print(f"  Cheb poly time : {cheb_time_full:.4f} s")
+print("  Errors (RMSE / SE):")
+print(f"    GP poly   : {rmse_poly_full:.4e} / {se_poly_full:.4e}")
+print(f"    Chebyshev : {rmse_cheb_full:.4e} / {se_cheb_full:.4e}")
+print(f"    GP vs Cheb: {rmse_poly_vs_cheb_full:.4e} / {se_poly_vs_cheb_full:.4e}")
+
+# -----------------------------
+# 3) Multi-run evaluation on random subsets
+# -----------------------------
+num_trials = 4
+sample_size = 250_000
+sample_size = min(sample_size, x_np.shape[0])
+rng = np.random.default_rng(seed=42)
+
+rmse_results = {"gp": [], "cheb": []}
+se_results = {"gp": [], "cheb": []}
+
+print(f"\n=== Multi-run subset evaluation ===")
+print(f"  trials         : {num_trials}")
+print(f"  sample size    : {sample_size:,} per trial")
+
+for trial in range(num_trials):
+    idx = rng.choice(x_np.shape[0], size=sample_size, replace=False)
+    x_trial_np = x_np[idx]
+    x_trial = torch.from_numpy(x_trial_np).to(device=device, dtype=dtype)
+
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    y_silu = silu(x_trial)
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    t1 = time.perf_counter()
+    silu_time = t1 - t0
+
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    y_poly = expr_torch(x_trial)
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    t1 = time.perf_counter()
+    poly_time = t1 - t0
+
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    t0 = time.perf_counter()
+    y_cheb = cheb_silu_torch(x_trial)
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    t1 = time.perf_counter()
+    cheb_time = t1 - t0
+
+    rmse_poly, se_poly = rmse_and_se(y_silu, y_poly)
+    rmse_cheb, se_cheb = rmse_and_se(y_silu, y_cheb)
+
+    rmse_results["gp"].append(rmse_poly)
+    rmse_results["cheb"].append(rmse_cheb)
+    se_results["gp"].append(se_poly)
+    se_results["cheb"].append(se_cheb)
+
+    print(
+        f"  trial {trial+1}: "
+        f"SiLU {silu_time:.4f}s, "
+        f"GP {poly_time:.4f}s (RMSE {rmse_poly:.3e}), "
+        f"Cheb {cheb_time:.4f}s (RMSE {rmse_cheb:.3e})"
+    )
+
+rmse_gp = np.array(rmse_results["gp"])
+rmse_cheb = np.array(rmse_results["cheb"])
+se_gp = np.array(se_results["gp"])
+se_cheb = np.array(se_results["cheb"])
+
+print("\n=== Aggregate error statistics over trials ===")
+print("  RMSE (mean ± std):")
+print(f"    GP poly   : {rmse_gp.mean():.4e} ± {rmse_gp.std():.4e}")
+print(f"    Chebyshev : {rmse_cheb.mean():.4e} ± {rmse_cheb.std():.4e}")
+print("  SE (mean ± std):")
+print(f"    GP poly   : {se_gp.mean():.4e} ± {se_gp.std():.4e}")
+print(f"    Chebyshev : {se_cheb.mean():.4e} ± {se_cheb.std():.4e}")
+
+# -----------------------------
+# 4) Boxplots for RMSE and SE
+# -----------------------------
+labels = ["GP poly", "Chebyshev"]
+
+plt.figure(figsize=(6, 4))
+plt.boxplot([rmse_gp, rmse_cheb], labels=labels, showmeans=True)
+plt.ylabel("RMSE (SiLU vs approximation)")
+plt.title(f"SiLU approximation RMSE over {num_trials} random subsets")
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+rmse_plot_path = "silu_rmse_boxplot.png"
+plt.savefig(rmse_plot_path, dpi=150)
+
+plt.figure(figsize=(6, 4))
+plt.boxplot([se_gp, se_cheb], labels=labels, showmeans=True)
+plt.ylabel("SE (sum of squared errors)")
+plt.yscale("log")
+plt.title(f"SiLU approximation SE over {num_trials} random subsets")
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+se_plot_path = "silu_se_boxplot.png"
+plt.savefig(se_plot_path, dpi=150)
+
+print("\nSaved boxplots:")
+print(f"  RMSE: {rmse_plot_path}")
+print(f"  SE  : {se_plot_path}")
