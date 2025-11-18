@@ -1,6 +1,7 @@
 import os
 import time
 import argparse
+from pathlib import Path
 import yaml
 import torch
 import numpy as np
@@ -43,13 +44,15 @@ def main():
     # Load config
     config = load_config(args.config)
 
-    wandb_flag = config["training"]['wandb']
+    wandb_flag = config["training"]["wandb"]
     tb_logdir = config["training"].get("tensorboard_logdir")
     writer = SummaryWriter(tb_logdir) if tb_logdir else None
     use_data_parallel = config["training"].get("data_parallel", False)
 
     if wandb_flag:
-        wandb.init(project=config["training"]['wandb_project'], config=config)
+        config_name = Path(args.config).stem
+        run_name = f"llm_training_{config_name}_{int(time.time())}"
+        wandb.init(project="680", name=run_name, config=config)
     device = detect_device() if config["training"]["device"] == "auto" else config["training"]["device"]
 
     # Load dataset
