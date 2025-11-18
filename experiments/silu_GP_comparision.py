@@ -118,6 +118,20 @@ def rmse_and_se(a: torch.Tensor, b: torch.Tensor):
     return rmse.item(), se.item()
 
 
+def mean_max_rel(a: torch.Tensor, b: torch.Tensor, eps: float = 1e-6):
+    """
+    Mean/max relative error, matching GP's _safe_rel_err definition.
+    """
+    denom = torch.maximum(
+        torch.abs(b),
+        torch.tensor(eps, dtype=b.dtype, device=b.device),
+    )
+    rel = torch.abs(a - b) / denom
+    mean_rel = torch.mean(rel)
+    max_rel = torch.max(rel)
+    return mean_rel.item(), max_rel.item()
+
+
 # -----------------------------
 # 1) Load real SiLU inputs from activations_all.npz
 #    We gather all signals whose name ends with 'silu_in'
@@ -174,6 +188,15 @@ rmse_poly_full, se_poly_full = rmse_and_se(y_silu_full, y_poly_full)
 rmse_cheb_full, se_cheb_full = rmse_and_se(y_silu_full, y_cheb_full)
 rmse_poly_vs_cheb_full, se_poly_vs_cheb_full = rmse_and_se(y_poly_full, y_cheb_full)
 
+mean_rel_poly_full, max_rel_poly_full = mean_max_rel(y_poly_full, y_silu_full)
+mean_rel_cheb_full, max_rel_cheb_full = mean_max_rel(y_cheb_full, y_silu_full)
+
+# GP-style error-only loss (ignoring degree/multiplies/depth terms)
+MEAN_REL_WEIGHT = 1.0
+MAX_REL_WEIGHT = 0.5
+loss_poly_full = MEAN_REL_WEIGHT * mean_rel_poly_full + MAX_REL_WEIGHT * max_rel_poly_full
+loss_cheb_full = MEAN_REL_WEIGHT * mean_rel_cheb_full + MAX_REL_WEIGHT * max_rel_cheb_full
+
 print("\n=== Single-run summary on full dataset ===")
 print(f"  SiLU time      : {silu_time_full:.4f} s")
 print(f"  GP poly time   : {poly_time_full:.4f} s")
@@ -182,6 +205,12 @@ print("  Errors (RMSE / SE):")
 print(f"    GP poly   : {rmse_poly_full:.4e} / {se_poly_full:.4e}")
 print(f"    Chebyshev : {rmse_cheb_full:.4e} / {se_cheb_full:.4e}")
 print(f"    GP vs Cheb: {rmse_poly_vs_cheb_full:.4e} / {se_poly_vs_cheb_full:.4e}")
+print("  Relative errors (mean_rel / max_rel):")
+print(f"    GP poly   : {mean_rel_poly_full:.4e} / {max_rel_poly_full:.4e}")
+print(f"    Chebyshev : {mean_rel_cheb_full:.4e} / {max_rel_cheb_full:.4e}")
+print("  GP-style error loss (mean_rel + 0.5 * max_rel):")
+print(f"    GP poly   : {loss_poly_full:.4e}")
+print(f"    Chebyshev : {loss_cheb_full:.4e}")
 
 # -----------------------------
 # 3) Multi-run evaluation on random subsets
@@ -193,6 +222,8 @@ rng = np.random.default_rng(seed=42)
 
 rmse_results = {"gp": [], "cheb": []}
 se_results = {"gp": [], "cheb": []}
+mean_rel_results = {"gp": [], "cheb": []}
+max_rel_results = {"gp": [], "cheb": []}
 
 print(f"\n=== Multi-run subset evaluation ===")
 print(f"  trials         : {num_trials}")
@@ -233,22 +264,33 @@ for trial in range(num_trials):
     rmse_poly, se_poly = rmse_and_se(y_silu, y_poly)
     rmse_cheb, se_cheb = rmse_and_se(y_silu, y_cheb)
 
+    mean_rel_poly, max_rel_poly = mean_max_rel(y_poly, y_silu)
+    mean_rel_cheb, max_rel_cheb = mean_max_rel(y_cheb, y_silu)
+
     rmse_results["gp"].append(rmse_poly)
     rmse_results["cheb"].append(rmse_cheb)
     se_results["gp"].append(se_poly)
     se_results["cheb"].append(se_cheb)
+    mean_rel_results["gp"].append(mean_rel_poly)
+    mean_rel_results["cheb"].append(mean_rel_cheb)
+    max_rel_results["gp"].append(max_rel_poly)
+    max_rel_results["cheb"].append(max_rel_cheb)
 
     print(
         f"  trial {trial+1}: "
         f"SiLU {silu_time:.4f}s, "
-        f"GP {poly_time:.4f}s (RMSE {rmse_poly:.3e}), "
-        f"Cheb {cheb_time:.4f}s (RMSE {rmse_cheb:.3e})"
+        f"GP {poly_time:.4f}s (RMSE {rmse_poly:.3e}, mean_rel {mean_rel_poly:.2e}), "
+        f"Cheb {cheb_time:.4f}s (RMSE {rmse_cheb:.3e}, mean_rel {mean_rel_cheb:.2e})"
     )
 
 rmse_gp = np.array(rmse_results["gp"])
 rmse_cheb = np.array(rmse_results["cheb"])
 se_gp = np.array(se_results["gp"])
 se_cheb = np.array(se_results["cheb"])
+mean_rel_gp = np.array(mean_rel_results["gp"])
+mean_rel_cheb = np.array(mean_rel_results["cheb"])
+max_rel_gp = np.array(max_rel_results["gp"])
+max_rel_cheb = np.array(max_rel_results["cheb"])
 
 print("\n=== Aggregate error statistics over trials ===")
 print("  RMSE (mean ± std):")
@@ -257,6 +299,12 @@ print(f"    Chebyshev : {rmse_cheb.mean():.4e} ± {rmse_cheb.std():.4e}")
 print("  SE (mean ± std):")
 print(f"    GP poly   : {se_gp.mean():.4e} ± {se_gp.std():.4e}")
 print(f"    Chebyshev : {se_cheb.mean():.4e} ± {se_cheb.std():.4e}")
+print("  mean_rel (mean ± std):")
+print(f"    GP poly   : {mean_rel_gp.mean():.4e} ± {mean_rel_gp.std():.4e}")
+print(f"    Chebyshev : {mean_rel_cheb.mean():.4e} ± {mean_rel_cheb.std():.4e}")
+print("  max_rel (mean ± std):")
+print(f"    GP poly   : {max_rel_gp.mean():.4e} ± {max_rel_gp.std():.4e}")
+print(f"    Chebyshev : {max_rel_cheb.mean():.4e} ± {max_rel_cheb.std():.4e}")
 
 # -----------------------------
 # 4) Boxplots for RMSE and SE
