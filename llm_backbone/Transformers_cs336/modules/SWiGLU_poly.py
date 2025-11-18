@@ -160,3 +160,4 @@ class SwiGLU(nn.Module):
             Tensor: Output tensor of shape (batch_size, sequence_length, d_model)
         """
         return expr_torch(x)
+
