@@ -45,6 +45,7 @@ def main():
     config = load_config(args.config)
 
     wandb_flag = config["training"]["wandb"]
+    wandb_project = config["training"]["wandb_project"]
     tb_logdir = config["training"].get("tensorboard_logdir")
     writer = SummaryWriter(tb_logdir) if tb_logdir else None
     use_data_parallel = config["training"].get("data_parallel", False)
@@ -52,7 +53,7 @@ def main():
     if wandb_flag:
         config_name = Path(args.config).stem
         run_name = f"llm_training_{config_name}_{int(time.time())}"
-        wandb.init(project="680", name=run_name, config=config)
+        wandb.init(project=wandb_project, name=run_name, config=config)
     device = detect_device() if config["training"]["device"] == "auto" else config["training"]["device"]
 
     # Load dataset

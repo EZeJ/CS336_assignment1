@@ -159,4 +159,5 @@ class SwiGLU(nn.Module):
         Returns:
             Tensor: Output tensor of shape (batch_size, sequence_length, d_model)
         """
+        # print("SwiGLU polynomial forward pass")
         return expr_torch(x)

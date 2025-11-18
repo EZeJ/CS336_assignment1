@@ -24,8 +24,8 @@ training:
   device: "cuda"              # run on GPUs directly
   data_parallel: true         # enable multi-GPU via DataParallel
   tensorboard_logdir: "./llm_backbone/runs/train_full"
-  wandb: false
-  wandb_project: "cs336_A1"
+  wandb: true
+  wandb_project: "680_poly_LLm"
 
 dataset:
   input_path: "../data/TinyStoriesV2-GPT4-train.txt"
