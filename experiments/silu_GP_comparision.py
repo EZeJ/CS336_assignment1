@@ -304,7 +304,7 @@ print(f"    GP poly   : {max_rel_gp.mean():.4e} ± {max_rel_gp.std():.4e}")
 print(f"    Chebyshev : {max_rel_cheb.mean():.4e} ± {max_rel_cheb.std():.4e}")
 
 # -----------------------------
-# 4) Boxplots for cross-entropy and mean_rel
+# 4) Boxplots for cross-entropy, mean_rel, and max_rel
 # -----------------------------
 labels = ["GP poly", "Chebyshev"]
 
@@ -326,6 +326,17 @@ plt.tight_layout()
 mean_rel_plot_path = "silu_mean_rel_boxplot.png"
 plt.savefig(mean_rel_plot_path, dpi=150)
 
+plt.figure(figsize=(6, 4))
+plt.boxplot([max_rel_gp, max_rel_cheb], labels=labels, showmeans=True)
+plt.ylabel("max_rel (max relative error)")
+plt.yscale("log")
+plt.title(f"SiLU approximation max_rel over {num_trials} random subsets")
+plt.grid(axis="y", alpha=0.3)
+plt.tight_layout()
+max_rel_plot_path = "silu_max_rel_boxplot.png"
+plt.savefig(max_rel_plot_path, dpi=150)
+
 print("\nSaved boxplots:")
 print(f"  Cross-entropy: {ce_plot_path}")
 print(f"  mean_rel     : {mean_rel_plot_path}")
+print(f"  max_rel      : {max_rel_plot_path}")
