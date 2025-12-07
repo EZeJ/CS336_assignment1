@@ -1,31 +1,36 @@
 model:
   d_model: 256
-  num_heads: 8
-  d_ff: 1024
-  num_layers: 6
-  vocab_size: 50257
-  context_length: 128
+  num_heads: 16
+  d_ff: 1344
+  num_layers: 4
+  vocab_size: 10000
+  context_length: 256
   rope_theta: 10000.0
 
 optimizer:
-  learning_rate_max: 0.001
-  learning_rate_min: 0.0001
+  learning_rate_max: 2e-4
+  learning_rate_min: 1e-5
   warmup_iters: 100
-  cosine_iters: 10000
-  weight_decay: 0.01
+  cosine_iters: 2000
+  weight_decay: 0.001
+  max_l2_norm: 0.2
 
 training:
-  batch_size: 32
-  max_iters: 10000
-  log_every: 100
-  val_every: 1000
-  checkpoint_path: "checkpoints/model.pt"
-  device: "auto"
+  batch_size: 300              # leverage dual RTX A6000s
+  max_iters: 2000
+  log_every: 1
+  val_every: 1
+  checkpoint_path: "./llm_backbone/checkpoints/best_val.pt"
+  device: "cuda"              # run on GPUs directly
+  data_parallel: true         # enable multi-GPU via DataParallel
+  tensorboard_logdir: "./llm_backbone/runs/best_valval"
+  wandb: true
+  wandb_project: "680"
 
 dataset:
-  train_path: "dataset/train.bin"
-  val_path: "dataset/val.bin"
-  input_path: "data/TinyStoriesV2-GPT4-valid.txt"
-  vocab_out: "dataset/vocab.npy"
-  merges_out: "dataset/merges.npy"
-  special_tokens: ["<PAD>", "<UNK>", "<BOS>", "<EOS>", "<|endoftext|>"]
+  input_path: "../data/TinyStoriesV2-GPT4-valid.txt"
+  train_path: "./llm_backbone/dataset/train_valid.bin"
+  val_path: "./llm_backbone/dataset/val_valid.bin"
+  vocab_out: "./llm_backbone/dataset/vocab_val.json"
+  merges_out: "./llm_backbone/dataset/merges_val.txt"
+  special_tokens: ["<|endoftext|>"]

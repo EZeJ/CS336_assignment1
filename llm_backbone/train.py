@@ -52,7 +52,7 @@ def main():
 
     if wandb_flag:
         config_name = Path(args.config).stem
-        run_name = f"llm_training_{config_name}_{int(time.time())}"
+        run_name = f"new_1000_terms_llm_training_{config_name}_{int(time.time())}"
         wandb.init(project=wandb_project, name=run_name, config=config)
     device = detect_device() if config["training"]["device"] == "auto" else config["training"]["device"]
 

@@ -1,0 +1,36 @@
+model:
+  d_model: 256
+  num_heads: 16
+  d_ff: 1344
+  num_layers: 4
+  vocab_size: 10000
+  context_length: 256
+  rope_theta: 10000.0
+
+optimizer:
+  learning_rate_max: 2e-4
+  learning_rate_min: 1e-5
+  warmup_iters: 100
+  cosine_iters: 2000
+  weight_decay: 0.001
+  max_l2_norm: 0.2
+
+training:
+  batch_size: 300              # leverage dual RTX A6000s
+  max_iters: 2000
+  log_every: 1
+  val_every: 1
+  checkpoint_path: "./llm_backbone/checkpoints/val_chebyshev.pt"
+  device: "cuda"              # run on GPUs directly
+  data_parallel: true         # enable multi-GPU via DataParallel
+  tensorboard_logdir: "./llm_backbone/runs/val_chebyshev"
+  wandb: true
+  wandb_project: "680"
+
+dataset:
+  input_path: "/home/ethan/experiments/llm_gp/data/TinyStoriesV2-GPT4-valid.txt"
+  train_path: "/home/ethan/experiments/llm_gp/llm/llm_backbone/dataset/train_valid.bin"
+  val_path: "/home/ethan/experiments/llm_gp/llm/llm_backbone/dataset/val_valid.bin"
+  vocab_out: "/home/ethan/experiments/llm_gp/llm/llm_backbone/dataset/vocab_val.json"
+  merges_out: "/home/ethan/experiments/llm_gp/llm/llm_backbone/dataset/merges_val.txt"
+  special_tokens: ["<|endoftext|>"]
