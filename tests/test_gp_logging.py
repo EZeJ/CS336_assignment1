@@ -7,8 +7,8 @@ TEST_ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(TEST_ROOT))
 
 from GP.logger_GP import ActivationLogger
-from llm_backbone.Transformers_cs336.modules.SwiGLU_GP import SwiGLUWithLogging
-from llm_backbone.Transformers_cs336.modules.RMSNorm_GP import RMSNormWithLogging
+from llm_backbone.Transformers.modules.SwiGLU_GP import SwiGLUWithLogging
+from llm_backbone.Transformers.modules.RMSNorm_GP import RMSNormWithLogging
 
 
 def test_activation_logger_subsamples():

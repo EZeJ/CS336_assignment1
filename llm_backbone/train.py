@@ -8,7 +8,7 @@ import numpy as np
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import trange, tqdm
-import llm_backbone.Transformers_cs336 as my_tf
+import llm_backbone.Transformers as my_tf
 import wandb
 import math
 

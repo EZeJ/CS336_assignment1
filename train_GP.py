@@ -16,10 +16,10 @@ import torch
 from torch import nn
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import trange
-import llm_backbone.Transformers_cs336 as my_tf
+import llm_backbone.Transformers as my_tf
 from GP.logger_GP import ActivationLogger
-from llm_backbone.Transformers_cs336.modules.SwiGLU_GP import SwiGLUWithLogging
-from llm_backbone.Transformers_cs336.modules.RMSNorm_GP import RMSNormWithLogging
+from llm_backbone.Transformers.modules.SwiGLU_GP import SwiGLUWithLogging
+from llm_backbone.Transformers.modules.RMSNorm_GP import RMSNormWithLogging
 
 
 torch.set_float32_matmul_precision("medium")

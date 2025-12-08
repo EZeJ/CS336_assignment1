@@ -5,4 +5,4 @@ try:
 except importlib.metadata.PackageNotFoundError:
     __version__ = "0.0.0"
 
-from .Transformers_cs336.modules.tools import *
+from .Transformers.modules.tools import *

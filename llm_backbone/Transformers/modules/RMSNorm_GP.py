@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import torch
 from torch import Tensor
-import llm_backbone.Transformers_cs336 as my_tf
+import llm_backbone.Transformers as my_tf
 from GP.logger_GP import ActivationLogger
 
 

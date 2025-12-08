@@ -32,7 +32,7 @@ class Linear(torch.nn.Module):
             :math:`k = \frac{1}{\text{in\_features}}`
       
     Examples::
-        >>> import llm_backbone.Transformers_cs336 as tf
+        >>> import llm_backbone.Transformers as tf
         >>> m = tf.moudles.Linear(20, 30)
         >>> input = torch.randn(128, 20)
         >>> output = m(input)

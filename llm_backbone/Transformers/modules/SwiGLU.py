@@ -108,66 +108,66 @@ def expr_torch(x: Tensor) -> Tensor:
     # ))
 
 
-# class SwiGLU(nn.Module):
-#     r"""
-#     Polynomial SwiGLU Feed-Forward Network (FFN) module.
+class SwiGLU(nn.Module):
+    r"""
+    Polynomial SwiGLU Feed-Forward Network (FFN) module.
 
-#     This module preserves the interface of the original SwiGLU FFN but
-#     replaces the SiLU+GLU computation with a fixed polynomial surrogate
-#     `expr_torch(x)` learned via genetic programming.
+    This module preserves the interface of the original SwiGLU FFN but
+    replaces the SiLU+GLU computation with a fixed polynomial surrogate
+    `expr_torch(x)` learned via genetic programming.
 
-#     Args:
-#         d_model (int): Dimensionality of the input and output features.
-#         d_ff (int | None): Dimensionality of the intermediate (hidden) layer.
-#                            Kept for API compatibility but not used directly
-#                            in the polynomial.
+    Args:
+        d_model (int): Dimensionality of the input and output features.
+        d_ff (int | None): Dimensionality of the intermediate (hidden) layer.
+                           Kept for API compatibility but not used directly
+                           in the polynomial.
 
-#     Shape:
-#         - Input:  (batch_size, sequence_length, d_model)
-#         - Output: (batch_size, sequence_length, d_model)
-#     """
+    Shape:
+        - Input:  (batch_size, sequence_length, d_model)
+        - Output: (batch_size, sequence_length, d_model)
+    """
 
-#     def __init__(
-#         self,
-#         d_model: int,
-#         d_ff: int | None = None,
-#         device: torch.device | None = None,
-#         dtype: torch.dtype | None = None,
-#     ) -> None:
-#         super().__init__()
-#         self.d_model = d_model
-#         self.d_ff = d_ff if d_ff is not None else self._compute_d_ff(d_model)
-#         self.device = device
-#         self.dtype = dtype
+    def __init__(
+        self,
+        d_model: int,
+        d_ff: int | None = None,
+        device: torch.device | None = None,
+        dtype: torch.dtype | None = None,
+    ) -> None:
+        super().__init__()
+        self.d_model = d_model
+        self.d_ff = d_ff if d_ff is not None else self._compute_d_ff(d_model)
+        self.device = device
+        self.dtype = dtype
 
-#         # Keep Linear submodules for state_dict / logging compatibility,
-#         # even though the forward path uses the polynomial surrogate.
-#         self.w1 = Linear(in_features=d_model, out_features=self.d_ff, device=device, dtype=dtype)
-#         self.w3 = Linear(in_features=d_model, out_features=self.d_ff, device=device, dtype=dtype)
-#         self.w2 = Linear(in_features=self.d_ff, out_features=d_model, device=device, dtype=dtype)
+        # Keep Linear submodules for state_dict / logging compatibility,
+        # even though the forward path uses the polynomial surrogate.
+        self.w1 = Linear(in_features=d_model, out_features=self.d_ff, device=device, dtype=dtype)
+        self.w3 = Linear(in_features=d_model, out_features=self.d_ff, device=device, dtype=dtype)
+        self.w2 = Linear(in_features=self.d_ff, out_features=d_model, device=device, dtype=dtype)
 
-#     @staticmethod
-#     def _compute_d_ff(d_model: int) -> int:
-#         """
-#         Computes the hidden dimension d_ff as (8/3) * d_model,
-#         rounded up to the next multiple of 64 for hardware efficiency.
-#         """
-#         rough = (8 * d_model) / 3
-#         d_ff = math.ceil(rough / 64) * 64
-#         return int(d_ff)
+    @staticmethod
+    def _compute_d_ff(d_model: int) -> int:
+        """
+        Computes the hidden dimension d_ff as (8/3) * d_model,
+        rounded up to the next multiple of 64 for hardware efficiency.
+        """
+        rough = (8 * d_model) / 3
+        d_ff = math.ceil(rough / 64) * 64
+        return int(d_ff)
 
-#     def forward(self, x: Tensor) -> Tensor:
-#         """
-#         Forward pass using the GP-learned polynomial surrogate.
+    def forward(self, x: Tensor) -> Tensor:
+        """
+        Forward pass using the GP-learned polynomial surrogate.
 
-#         Args:
-#             x (Tensor): Input tensor of shape (batch_size, sequence_length, d_model)
+        Args:
+            x (Tensor): Input tensor of shape (batch_size, sequence_length, d_model)
 
-#         Returns:
-#             Tensor: Output tensor of shape (batch_size, sequence_length, d_model)
-#         """
-#         # print("SwiGLU polynomial forward pass")
-#         return expr_torch(x)
+        Returns:
+            Tensor: Output tensor of shape (batch_size, sequence_length, d_model)
+        """
+        # print("SwiGLU polynomial forward pass")
+        return expr_torch(x)
 
 
 

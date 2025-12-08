@@ -10,7 +10,7 @@ import numpy as np
 import torch
 import yaml
 
-import llm_backbone.Transformers_cs336 as my_tf
+import llm_backbone.Transformers as my_tf
 
 
 torch.set_float32_matmul_precision("medium")
